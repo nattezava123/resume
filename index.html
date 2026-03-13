@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Natthi Homnual - Professional Resume</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { --primary: #2c3e50; --accent: #18bc9c; --bg: #f4f7f6; }
+        body { font-family: 'Sarabun', sans-serif; background-color: var(--bg); color: #34495e; }
+        
+        /* Sidebar */
+        .sidebar { background: var(--primary); color: white; min-height: 100vh; padding: 40px 30px; }
+        .profile-img { 
+            width: 180px; height: 220px; object-fit: cover; 
+            border: 4px solid var(--accent); border-radius: 15px; 
+            margin-bottom: 25px; display: block; margin-left: auto; margin-right: auto;
+            background-color: #eee;
+        }
+        .contact-link { color: white; text-decoration: none; display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 0.9rem; transition: 0.3s; }
+        .contact-link:hover { color: var(--accent); padding-left: 5px; }
+        .contact-link i { color: var(--accent); width: 20px; text-align: center; }
+
+        /* Content */
+        .main-content { padding: 60px; }
+        .section-title { font-weight: 700; color: var(--primary); text-transform: uppercase; border-bottom: 4px solid var(--accent); display: inline-block; margin-bottom: 30px; }
+        .exp-card { background: white; border: none; border-left: 5px solid var(--accent); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; transition: 0.3s; }
+        .exp-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        .skill-badge { background: white; color: var(--primary); border: 1px solid #ddd; padding: 6px 15px; border-radius: 50px; font-size: 0.85rem; font-weight: 600; transition: 0.3s; }
+        .skill-badge:hover { background: var(--primary); color: white; }
+        
+        @media (max-width: 991px) { .sidebar { min-height: auto; text-align: center; } .contact-link { justify-content: center; } }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid p-0">
+    <div class="row g-0">
+        <aside class="col-lg-3 sidebar">
+            <div class="text-center">
+                <img src="profile.jpg" alt="ณัฐที หอมนวล" class="profile-img shadow" onerror="this.src='https://via.placeholder.com/180x220?text=Natthi'">
+                <h2 class="fw-bold mb-1">ณัฐที หอมนวล</h2>
+                <p class="mb-4" style="color: var(--accent); font-weight: 600;">IT DEVELOPER & SUPPORT</p>
+            </div>
+
+            <div class="mt-4">
+                <h6 class="text-uppercase fw-bold mb-3 small opacity-75">Contact Info</h6>
+                <a href="tel:0926298593" class="contact-link"><i class="fa-solid fa-phone"></i> 092-629-8593</a>
+                <a href="mailto:nattezaval996@gmail.com" class="contact-link"><i class="fa-solid fa-envelope"></i> nattezaval996@gmail.com</a>
+                <a href="https://line.me/ti/p/w4y7jvW5kc" target="_blank" class="contact-link"><i class="fa-brands fa-line"></i> Line: nattezaval996</a>
+                <div class="contact-link"><i class="fa-solid fa-location-dot"></i> ศรีราชา, ชลบุรี 20110</div>
+            </div>
+
+            <div class="mt-5">
+                <h6 class="text-uppercase fw-bold mb-3 small opacity-75">Education</h6>
+                <div class="mb-3 ps-2 border-start border-2 border-accent">
+                    <div class="fw-bold small">วิทยาลัยวิศวกรรมแหลมฉบัง</div>
+                    <div class="small text-white-50">ปวส. เทคโนโลยีสารสนเทศ (GPA 2.93)</div>
+                </div>
+                <div class="ps-2 border-start border-2 border-accent">
+                    <div class="fw-bold small">โรงเรียนพรหมพิรามวิทยา</div>
+                    <div class="small text-white-50">มัธยมศึกษา (GPA 2.50)</div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="col-lg-9 main-content">
+            <section class="mb-5">
+                <h3 class="section-title">Technical Expertise</h3>
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold mb-3"><i class="fa-solid fa-database text-accent me-2"></i> Database & Systems</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="skill-badge">Microsoft SQL Server</span>
+                            <span class="skill-badge">Oracle SQL</span>
+                            <span class="skill-badge">Microsoft Azure</span>
+                            <span class="skill-badge">Microsoft Factory</span>
+                            <span class="skill-badge">Windows OS Admin</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold mb-3"><i class="fa-solid fa-server text-accent me-2"></i> Infrastructure & Hardware</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="skill-badge">Networking (Routers/Switches)</span>
+                            <span class="skill-badge">CCTV Installation</span>
+                            <span class="skill-badge">Hardware Troubleshooting</span>
+                            <span class="skill-badge">Technical Problem Solving</span>
+                            <span class="skill-badge">VPN & File Server Support</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h3 class="section-title">Professional Experience</h3>
+                <div id="loader" class="text-center py-5">
+                    <div class="spinner-border text-success" role="status"></div>
+                    <p class="mt-2 text-muted">กำลังดึงข้อมูลจาก Cloud Firestore...</p>
+                </div>
+                <div id="experience-list"></div>
+            </section>
+        </main>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+    // Firebase Configuration จากโปรเจกต์ของคุณ
+    const firebaseConfig = {
+        apiKey: "AIzaSyA3B42mC2SmIMSNchZVmrhj3MctOhUsNeQ",
+        authDomain: "resume-50784.firebaseapp.com",
+        projectId: "resume-50784",
+        storageBucket: "resume-50784.firebasestorage.app",
+        messagingSenderId: "746548464618",
+        appId: "1:746548464618:web:8b1c69248f7689faeac093",
+        measurementId: "G-4WMPV0SXCK"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function loadData() {
+        const container = document.getElementById('experience-list');
+        const loader = document.getElementById('loader');
+        
+        try {
+            // ดึงข้อมูลจาก Collection 'experience' และเรียงลำดับตามฟิลด์ 'order'
+            const q = query(collection(db, "experience"), orderBy("order", "desc"));
+            const snap = await getDocs(q);
+            let html = '';
+            
+            if (snap.empty) {
+                container.innerHTML = '<p class="text-center text-muted">ไม่พบข้อมูลประสบการณ์ทำงานใน Database</p>';
+                loader.style.display = 'none';
+                return;
+            }
+
+            snap.forEach(doc => {
+                const data = doc.data();
+                html += `
+                    <div class="card exp-card mb-4 border-0">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between flex-wrap gap-2 align-items-start mb-3">
+                                <div>
+                                    <h5 class="fw-bold text-primary mb-1">${data.company}</h5>
+                                    <h6 class="text-muted fw-bold small">${data.position}</h6>
+                                </div>
+                                <span class="badge bg-dark px-3 py-2 shadow-sm">${data.year}</span>
+                            </div>
+                            <ul class="mb-0 text-secondary">
+                                ${data.details && Array.isArray(data.details) 
+                                    ? data.details.map(d => `<li class="mb-2">${d}</li>`).join('') 
+                                    : '<li>ไม่มีรายละเอียดข้อมูล</li>'}
+                            </ul>
+                        </div>
+                    </div>`;
+            });
+            
+            loader.style.display = 'none';
+            container.innerHTML = html;
+
+        } catch (e) {
+            console.error("Firebase Error:", e);
+            loader.innerHTML = `
+                <div class="alert alert-danger mx-auto" style="max-width: 500px;">
+                    <i class="fa-solid fa-circle-exclamation me-2"></i>
+                    เกิดข้อผิดพลาด: กรุณาตรวจสอบ Firebase Rules ของคุณ
+                </div>`;
+        }
+    }
+
+    // เรียกใช้ฟังก์ชันเมื่อโหลดหน้าเว็บ
+    window.addEventListener('DOMContentLoaded', loadData);
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
