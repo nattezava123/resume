@@ -24,123 +24,45 @@
                     <span class="ms-3 ps-3 border-start border-2 text-secondary fw-bold" style="font-size: 15px;">ระบบพนักงาน (User)</span>
                 </div>
                 <div class="d-flex align-items-center gap-3">
-                    <div class="user-badge" id="header-user-id"></div>
+                    <div class="user-badge d-flex align-items-center gap-2" style="padding: 4px 16px 4px 4px; background-color: #eff6ff; border: 1px solid #dbeafe; border-radius: 30px;">
+                        <img id="header-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                        <span id="header-user-name" style="font-size: 14px; font-weight: 700; color: #2563eb;">กำลังโหลด...</span>
+                    </div>
                     <div class="window-controls"><div class="win-btn close" onclick="exitSystem()">✕</div></div>
                 </div>
             </div>
 
             <div class="view-body">
-                <!-- แท็บ: แก้ไขโปรไฟล์พนักงาน (ตั้งเป็นหน้าแรกตามบรีฟ) -->
                 <div id="tab-edit-view" class="tab-view">
                     <div class="blue-panel mx-auto" style="max-width: 600px;">
                         <div class="panel-title">ข้อมูลส่วนตัวและผู้ใช้งาน</div>
+                        <div class="text-center mb-4">
+                            <img id="profile-avatar-display" class="avatar mx-auto" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150" alt="Profile">
+                        </div>
                         <div class="row mb-3">
-                            <div class="col-md-3 form-group">
-                                <label>คำนำหน้า</label>
+                            <div class="col-md-3 form-group"><label>คำนำหน้า</label>
                                 <select id="edit-prefix" class="form-control form-select">
                                     <option value="นาย">นาย</option><option value="นาง">นาง</option><option value="นางสาว">นางสาว</option>
                                 </select>
                             </div>
-                            <div class="col-md-4 form-group">
-                                <label>ชื่อ</label>
-                                <input type="text" id="edit-firstname" class="form-control">
-                            </div>
-                            <div class="col-md-5 form-group">
-                                <label>นามสกุล</label>
-                                <input type="text" id="edit-lastname" class="form-control">
-                            </div>
+                            <div class="col-md-4 form-group"><label>ชื่อ</label><input type="text" id="edit-firstname" class="form-control"></div>
+                            <div class="col-md-5 form-group"><label>นามสกุล</label><input type="text" id="edit-lastname" class="form-control"></div>
                         </div>
-                        <div class="form-group mb-3">
-                            <label>รหัสพนักงาน (Username)</label>
-                            <input type="text" id="edit-userid" class="form-control bg-light" disabled>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label>ตั้งรหัสผ่านใหม่ (Password)</label>
-                            <input type="password" id="edit-password" class="form-control">
-                        </div>
-                        <div class="form-group mb-4">
-                            <label>เบอร์โทรศัพท์</label>
-                            <input type="text" id="edit-phone" class="form-control">
+                        <div class="form-group mb-3"><label>รหัสพนักงาน (Username)</label><input type="text" id="edit-userid" class="form-control bg-light" disabled></div>
+                        <div class="form-group mb-3"><label>ตั้งรหัสผ่านใหม่ (Password)</label><input type="password" id="edit-password" class="form-control"></div>
+                        <div class="row mb-4">
+                            <div class="col-md-5 form-group"><label>เบอร์โทรศัพท์</label><input type="text" id="edit-phone" class="form-control"></div>
+                            <div class="col-md-7 form-group"><label>อัปโหลดรูปโปรไฟล์</label><input type="file" id="edit-avatar" class="form-control" accept="image/*"></div>
                         </div>
                         <button class="btn-pill btn-white w-100" onclick="updateProfileData()">อัปเดตข้อมูล</button>
                     </div>
                 </div>
 
-                <!-- แท็บ: แจ้งเบิกเดินทาง -->
-                <div id="tab-work-view" class="tab-view" style="display: none;">
-                    <div class="blue-panel">
-                        <div class="panel-title">บันทึกข้อมูลการเดินทางและเบิกจ่าย</div>
-                        <input type="hidden" id="edit-report-id" value="">
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-6 form-group">
-                                <label>วันที่</label>
-                                <input type="date" id="w-date" class="form-control">
-                            </div>
-                            <div class="col-md-6 form-group">
-                                <label>ประเภทเชื้อเพลิง/รถ</label>
-                                <select id="w-fuel-type" class="form-control form-select" onchange="calculateLiveExpense()"></select>
-                            </div>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-md-6 form-group">
-                                <label>เลขไมล์เริ่มต้น</label>
-                                <input type="number" id="w-start-mile" class="form-control" oninput="calculateLiveExpense()">
-                            </div>
-                            <div class="col-md-6 form-group">
-                                <label>เลขไมล์สิ้นสุด</label>
-                                <input type="number" id="w-end-mile" class="form-control" oninput="calculateLiveExpense()">
-                            </div>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label>รายละเอียดงาน</label>
-                            <input type="text" id="w-detail" class="form-control" placeholder="ระบุสถานที่ หรือเนื้องานที่เดินทางไปทำ">
-                        </div>
-                        <div class="form-group mb-4">
-                            <label>แนบรูปภาพ (สลิป/หน้าปัดรถ)</label>
-                            <input type="file" id="w-file" class="form-control" accept="image/*">
-                        </div>
-                        
-                        <div class="white-card text-center mb-4" style="background-color: #f0fdf4; border-color: #86efac;">
-                            <div style="font-size: 16px; color:#166534;">ระยะทางรวม: <strong id="live-distance">0</strong> กิโลเมตร</div>
-                            <div style="font-size: 20px; color: #15803d; margin-top: 5px; font-weight: bold;">จำนวนเงินที่ได้: ฿<span id="live-expense">0.00</span></div>
-                        </div>
-                        <button class="btn-pill btn-blue w-100" onclick="saveWorkReport()">บันทึกส่งเรื่องเบิก</button>
-                    </div>
-                </div>
-
-                <!-- แท็บ: ประวัติ/ตารางสรุป -->
-                <div id="tab-report-view" class="tab-view" style="display: none;">
-                    <div class="summary-box row g-3 mb-4">
-                        <div class="col-md-6">
-                            <div class="summary-card h-100">
-                                <h3>รวมยอดเบิกทั้งหมด (บาท)</h3>
-                                <p id="sum-total">0.00</p>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="summary-card h-100">
-                                <h3>ระยะทางรวม (กม.)</h3>
-                                <p id="sum-km">0</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="blue-panel">
-                        <div class="panel-title">รายละเอียดรายการเบิกจ่ายน้ำมัน</div>
-                        <div class="table-responsive">
-                            <table class="data-table table align-middle">
-                                <thead>
-                                    <tr><th>ลำดับ</th><th>วันที่</th><th>รายละเอียด</th><th>ประเภทรถ</th><th>การคำนวณ</th><th>ยอดเงิน</th><th>สถานะ</th><th>จัดการ</th></tr>
-                                </thead>
-                                <tbody id="user-report-list"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+                <div id="tab-work-view" class="tab-view" style="display: none;"><div class="blue-panel"><div class="panel-title">บันทึกข้อมูลการเดินทางและเบิกจ่าย</div><input type="hidden" id="edit-report-id" value=""><div class="row mb-3"><div class="col-md-6 form-group"><label>วันที่</label><input type="date" id="w-date" class="form-control"></div><div class="col-md-6 form-group"><label>ประเภทเชื้อเพลิง/รถ</label><select id="w-fuel-type" class="form-control form-select" onchange="calculateLiveExpense()"></select></div></div><div class="row mb-3"><div class="col-md-6 form-group"><label>เลขไมล์เริ่มต้น</label><input type="number" id="w-start-mile" class="form-control" oninput="calculateLiveExpense()"></div><div class="col-md-6 form-group"><label>เลขไมล์สิ้นสุด</label><input type="number" id="w-end-mile" class="form-control" oninput="calculateLiveExpense()"></div></div><div class="form-group mb-3"><label>รายละเอียดงาน</label><input type="text" id="w-detail" class="form-control" placeholder="ระบุสถานที่ หรือเนื้องานที่เดินทางไปทำ"></div><div class="form-group mb-4"><label>แนบรูปภาพ (สลิป/หน้าปัดรถ)</label><input type="file" id="w-file" class="form-control" accept="image/*"></div><div class="white-card text-center mb-4" style="background-color: #f0fdf4; border-color: #86efac;"><div style="font-size: 16px; color:#166534;">ระยะทางรวม: <strong id="live-distance">0</strong> กิโลเมตร</div><div style="font-size: 20px; color: #15803d; margin-top: 5px; font-weight: bold;">จำนวนเงินที่ได้: ฿<span id="live-expense">0.00</span></div></div><button class="btn-pill btn-blue w-100" onclick="saveWorkReport()">บันทึกส่งเรื่องเบิก</button></div></div>
+                <div id="tab-report-view" class="tab-view" style="display: none;"><div class="summary-box row g-3 mb-4"><div class="col-md-6"><div class="summary-card h-100"><h3>รวมยอดเบิกทั้งหมด (บาท)</h3><p id="sum-total">0.00</p></div></div><div class="col-md-6"><div class="summary-card h-100"><h3>ระยะทางรวม (กม.)</h3><p id="sum-km">0</p></div></div></div><div class="blue-panel"><div class="panel-title">รายละเอียดรายการเบิกจ่ายน้ำมัน</div><div class="table-responsive"><table class="data-table table align-middle"><thead><tr><th>ลำดับ</th><th>วันที่</th><th>รายละเอียด</th><th>ประเภทรถ</th><th>การคำนวณ</th><th>ยอดเงิน</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody id="user-report-list"></tbody></table></div></div></div>
             </div>
         </div>
     </div>
-    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="user.js"></script>
 </body>
