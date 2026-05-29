@@ -11,9 +11,9 @@
     <div class="mobile-container">
         <div class="sidebar">
             <div style="color: white; font-weight: bold; font-size: 14px; text-align: center; margin-bottom: 20px;">USER PANEL</div>
-            <div class="menu-item active" id="menu-work" onclick="switchTab('work')"><div class="menu-icon">⛽</div><span>แจ้งเบิกค่าเดินทาง</span></div>
+            <div class="menu-item active" id="menu-edit" onclick="switchTab('edit')"><div class="menu-icon">👤</div><span>ข้อมูลส่วนตัว</span></div>
+            <div class="menu-item" id="menu-work" onclick="switchTab('work')"><div class="menu-icon">⛽</div><span>แจ้งเบิกค่าเดินทาง</span></div>
             <div class="menu-item" id="menu-report" onclick="switchTab('report')"><div class="menu-icon">📊</div><span>ประวัติรายการ</span></div>
-            <div class="menu-item" id="menu-edit" onclick="switchTab('edit')"><div class="menu-icon">👤</div><span>ข้อมูลส่วนตัว (แก้ไข)</span></div>
             <div class="menu-item" onclick="exitSystem()"><div class="menu-icon">🚪</div><span>ออกจากระบบ</span></div>
         </div>
 
@@ -30,7 +30,44 @@
             </div>
 
             <div class="view-body">
-                <div id="tab-work-view" class="tab-view">
+                <!-- แท็บ: แก้ไขโปรไฟล์พนักงาน (ตั้งเป็นหน้าแรกตามบรีฟ) -->
+                <div id="tab-edit-view" class="tab-view">
+                    <div class="blue-panel mx-auto" style="max-width: 600px;">
+                        <div class="panel-title">ข้อมูลส่วนตัวและผู้ใช้งาน</div>
+                        <div class="row mb-3">
+                            <div class="col-md-3 form-group">
+                                <label>คำนำหน้า</label>
+                                <select id="edit-prefix" class="form-control form-select">
+                                    <option value="นาย">นาย</option><option value="นาง">นาง</option><option value="นางสาว">นางสาว</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 form-group">
+                                <label>ชื่อ</label>
+                                <input type="text" id="edit-firstname" class="form-control">
+                            </div>
+                            <div class="col-md-5 form-group">
+                                <label>นามสกุล</label>
+                                <input type="text" id="edit-lastname" class="form-control">
+                            </div>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label>รหัสพนักงาน (Username)</label>
+                            <input type="text" id="edit-userid" class="form-control bg-light" disabled>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label>ตั้งรหัสผ่านใหม่ (Password)</label>
+                            <input type="password" id="edit-password" class="form-control">
+                        </div>
+                        <div class="form-group mb-4">
+                            <label>เบอร์โทรศัพท์</label>
+                            <input type="text" id="edit-phone" class="form-control">
+                        </div>
+                        <button class="btn-pill btn-white w-100" onclick="updateProfileData()">อัปเดตข้อมูล</button>
+                    </div>
+                </div>
+
+                <!-- แท็บ: แจ้งเบิกเดินทาง -->
+                <div id="tab-work-view" class="tab-view" style="display: none;">
                     <div class="blue-panel">
                         <div class="panel-title">บันทึกข้อมูลการเดินทางและเบิกจ่าย</div>
                         <input type="hidden" id="edit-report-id" value="">
@@ -72,6 +109,7 @@
                     </div>
                 </div>
 
+                <!-- แท็บ: ประวัติ/ตารางสรุป -->
                 <div id="tab-report-view" class="tab-view" style="display: none;">
                     <div class="summary-box row g-3 mb-4">
                         <div class="col-md-6">
@@ -97,41 +135,6 @@
                                 <tbody id="user-report-list"></tbody>
                             </table>
                         </div>
-                    </div>
-                </div>
-
-                <div id="tab-edit-view" class="tab-view" style="display: none;">
-                    <div class="blue-panel mx-auto" style="max-width: 600px;">
-                        <div class="panel-title">ข้อมูลส่วนตัวและผู้ใช้งาน</div>
-                        <div class="row mb-3">
-                            <div class="col-md-3 form-group">
-                                <label>คำนำหน้า</label>
-                                <select id="edit-prefix" class="form-control form-select">
-                                    <option value="นาย">นาย</option><option value="นาง">นาง</option><option value="นางสาว">นางสาว</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4 form-group">
-                                <label>ชื่อ</label>
-                                <input type="text" id="edit-firstname" class="form-control">
-                            </div>
-                            <div class="col-md-5 form-group">
-                                <label>นามสกุล</label>
-                                <input type="text" id="edit-lastname" class="form-control">
-                            </div>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label>รหัสพนักงาน (Username)</label>
-                            <input type="text" id="edit-userid" class="form-control bg-light" disabled>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label>ตั้งรหัสผ่านใหม่ (Password)</label>
-                            <input type="password" id="edit-password" class="form-control">
-                        </div>
-                        <div class="form-group mb-4">
-                            <label>เบอร์โทรศัพท์</label>
-                            <input type="text" id="edit-phone" class="form-control">
-                        </div>
-                        <button class="btn-pill btn-white w-100" onclick="updateProfileData()">อัปเดตข้อมูล</button>
                     </div>
                 </div>
             </div>

@@ -11,13 +11,14 @@
     <div class="mobile-container">
         <div class="sidebar">
             <div style="color: white; font-weight: bold; font-size: 14px; text-align: center; margin-bottom: 20px;">ADMIN PANEL</div>
-            <div class="menu-item active" onclick="toggleSubBar(true)"><div class="menu-icon">⚙️</div><span>การจัดการระบบ</span></div>
+            <div class="menu-item active" id="menu-profile" onclick="switchAdminTab('profile')"><div class="menu-icon">👤</div><span>ข้อมูลส่วนตัว</span></div>
+            <div class="menu-item" id="menu-approves" onclick="switchAdminTab('approves')"><div class="menu-icon">✔️</div><span>อนุมัติรายการ</span></div>
+            <div class="menu-item" id="menu-prices" onclick="switchAdminTab('prices')"><div class="menu-icon">⛽</div><span>ตั้งค่าราคาน้ำมัน</span></div>
+            <div class="menu-item" id="menu-users" onclick="switchAdminTab('users')"><div class="menu-icon">👥</div><span>จัดการพนักงาน</span></div>
+            <div class="menu-item" id="menu-reports" onclick="switchAdminTab('reports')"><div class="menu-icon">📉</div><span>ออกรายงานสรุป</span></div>
+            <div class="menu-item" onclick="exitSystem()"><div class="menu-icon">🚪</div><span>ออกจากระบบ</span></div>
         </div>
-        <div class="sub-sidebar" id="admin-sub-bar">
-            <div class="sub-menu-icon active" id="sub-btn-approves" onclick="switchAdminTab('approves')" title="อนุมัติรายการ">✔️</div>
-            <div class="sub-menu-icon" id="sub-btn-prices" onclick="switchAdminTab('prices')" title="ตั้งค่าราคาน้ำมัน">⛽</div>
-            <div class="sub-menu-icon" id="sub-btn-users" onclick="switchAdminTab('users')" title="จัดการพนักงาน">👥</div>
-        </div>
+
         <div class="main-content">
             <div class="header">
                 <div class="logo-container d-flex align-items-baseline">
@@ -26,14 +27,27 @@
                 </div>
                 <div class="d-flex align-items-center gap-3">
                     <div class="user-badge" id="admin-id-badge">ADMIN</div>
-                    <div class="window-controls">
-                        <div class="win-btn close" onclick="exitSystem()">✕</div>
-                    </div>
+                    <div class="window-controls"><div class="win-btn close" onclick="exitSystem()">✕</div></div>
                 </div>
             </div>
 
             <div class="view-body">
-                <div id="adm-approves-view" class="adm-tab-view">
+                <div id="adm-profile-view" class="adm-tab-view">
+                    <div class="blue-panel mx-auto" style="max-width: 600px;">
+                        <div class="panel-title">ข้อมูลส่วนตัวผู้ดูแลระบบ</div>
+                        <div class="row mb-3">
+                            <div class="col-md-3 form-group"><label>คำนำหน้า</label><select id="adm-prefix" class="form-control form-select"><option value="นาย">นาย</option><option value="นาง">นาง</option><option value="นางสาว">นางสาว</option></select></div>
+                            <div class="col-md-4 form-group"><label>ชื่อ</label><input type="text" id="adm-firstname" class="form-control"></div>
+                            <div class="col-md-5 form-group"><label>นามสกุล</label><input type="text" id="adm-lastname" class="form-control"></div>
+                        </div>
+                        <div class="form-group mb-3"><label>รหัสพนักงาน (Username)</label><input type="text" id="adm-userid" class="form-control bg-light" disabled></div>
+                        <div class="form-group mb-3"><label>ตั้งรหัสผ่านใหม่ (Password)</label><input type="password" id="adm-password" class="form-control"></div>
+                        <div class="form-group mb-4"><label>เบอร์โทรศัพท์</label><input type="text" id="adm-phone" class="form-control"></div>
+                        <button class="btn-pill btn-white w-100" onclick="updateAdminProfile()">อัปเดตข้อมูล</button>
+                    </div>
+                </div>
+
+                <div id="adm-approves-view" class="adm-tab-view" style="display: none;">
                     <div class="blue-panel">
                         <div class="panel-title">รายการรออนุมัติค่าน้ำมันเชื้อเพลิง</div>
                         <div id="admin-verification-queue" class="d-flex flex-column gap-3"></div>
@@ -45,13 +59,7 @@
                         <div class="panel-title">เกณฑ์ราคาน้ำมันเชื้อเพลิง / ไฟฟ้า / แก๊ส</div>
                         <div class="table-responsive">
                             <table class="data-table table align-middle">
-                                <thead>
-                                    <tr>
-                                        <th>ประเภทรถ</th>
-                                        <th>ชื่อเชื้อเพลิง</th>
-                                        <th>เรทราคา (บาท / กิโลเมตร)</th>
-                                    </tr>
-                                </thead>
+                                <thead><tr><th>ประเภทรถ</th><th>ชื่อเชื้อเพลิง</th><th>เรทราคา (บาท / กิโลเมตร)</th></tr></thead>
                                 <tbody id="fuel-price-tbody"></tbody>
                             </table>
                         </div>
@@ -61,11 +69,29 @@
 
                 <div id="adm-users-view" class="adm-tab-view" style="display: none;">
                     <div class="blue-panel">
-                        <div class="panel-title">ข้อมูลพนักงานในระบบ</div>
+                        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+                            <div class="panel-title mb-0 border-0">ข้อมูลพนักงานในระบบ</div>
+                            <button class="btn-pill btn-blue" onclick="addNewUser()">+ เพิ่มพนักงานใหม่</button>
+                        </div>
                         <div class="table-responsive">
-                            <table class="data-table table">
-                                <thead><tr><th>ลำดับ</th><th>รหัสพนักงาน</th><th>ชื่อ-นามสกุล</th><th>ตำแหน่ง</th><th>เบอร์โทรศัพท์</th></tr></thead>
+                            <table class="data-table table align-middle">
+                                <thead><tr><th>ลำดับ</th><th>รหัสพนักงาน</th><th>ชื่อ-นามสกุล</th><th>ตำแหน่ง</th><th>เบอร์โทรศัพท์</th><th>จัดการ</th></tr></thead>
                                 <tbody id="admin-user-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="adm-reports-view" class="adm-tab-view" style="display: none;">
+                    <div class="blue-panel">
+                        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+                            <div class="panel-title mb-0 border-0">ออกรายงานการเบิกจ่ายประจำวัน/เดือน/ปี</div>
+                            <button class="btn-pill btn-white" onclick="window.print()">🖨️ พิมพ์รายงาน</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table table align-middle">
+                                <thead><tr><th>วันที่</th><th>รหัสพนักงาน</th><th>ชื่องาน</th><th>ประเภท</th><th>ระยะทาง (กม.)</th><th>ยอดเงิน (บาท)</th><th>สถานะ</th></tr></thead>
+                                <tbody id="admin-reports-tbody"></tbody>
                             </table>
                         </div>
                     </div>

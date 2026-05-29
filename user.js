@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('header-user-id').innerText = currentUserId;
     loadUserProfile();
     populateFuelDropdown();
+    switchTab('edit'); 
 });
 
 function switchTab(targetTab) {
@@ -42,10 +43,7 @@ function updateProfileData() {
         localStorage.setItem('users', JSON.stringify(users));
         
         Swal.fire({
-            icon: 'success',
-            title: 'อัปเดตสำเร็จ',
-            text: 'ข้อมูลส่วนตัวของคุณถูกบันทึกแล้ว',
-            confirmButtonColor: '#1A3673'
+            icon: 'success', title: 'อัปเดตสำเร็จ', text: 'ข้อมูลส่วนตัวของคุณถูกบันทึกแล้ว', confirmButtonColor: '#2563eb'
         });
     }
 }
@@ -134,7 +132,7 @@ function saveWorkReport() {
             icon: 'success',
             title: editId ? 'แก้ไขสำเร็จ' : 'ส่งคำขอเบิกเรียบร้อย',
             text: 'คำขอของคุณเข้าสู่ระบบเพื่อรอการอนุมัติแล้ว',
-            confirmButtonColor: '#1A3673'
+            confirmButtonColor: '#2563eb'
         }).then(() => {
             document.getElementById('edit-report-id').value = '';
             document.getElementById('w-start-mile').value = '';
@@ -202,7 +200,6 @@ function renderUserReports() {
 }
 
 function deleteReport(id) {
-    // การใช้ SweetAlert ในการ Confirm ลบ
     Swal.fire({
         title: 'ยืนยันการลบรายการ',
         text: "คุณต้องการยกเลิกและลบรายการเบิกจ่ายนี้ใช่หรือไม่?",
@@ -237,7 +234,6 @@ function editReport(id) {
         switchTab('work');
         calculateLiveExpense();
         
-        // ใช้ Toast ของ SweetAlert ในการแจ้งเตือนมุมขวาบน
         Swal.fire({
             toast: true,
             position: 'top-end',
