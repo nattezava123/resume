@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>Chanchai OFFICE - เข้าสู่ระบบ</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="mobile-container flex-column justify-content-center align-items-center p-4">
+        <div class="text-center mb-5">
+            <div class="title" style="color: #1A3673; font-size: 42px; font-weight: bold; line-height: 1;">Chanchai</div>
+            <div class="subtitle" style="color: #64748b; font-size: 14px; letter-spacing: 4px;">OFFICE</div>
+        </div>
+        <div style="width: 100%; max-width: 320px;">
+            <div class="form-group mb-3">
+                <input type="text" id="username" class="form-control text-center" placeholder="ชื่อผู้ใช้ (Username)">
+            </div>
+            <div class="form-group mb-4">
+                <input type="password" id="password" class="form-control text-center" placeholder="รหัสผ่าน (Password)">
+            </div>
+            <button class="btn-pill btn-blue w-100" onclick="executeLogin()">เข้าสู่ระบบ</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            let existingUsers = JSON.parse(localStorage.getItem('users'));
+            if (existingUsers && existingUsers.length > 0 && !existingUsers[0].password) {
+                localStorage.removeItem('users');
+            }
+            if (!localStorage.getItem('users')) {
+                const defaultUsers = [
+                    { user_id: "CHA2546", prefix: "นาย", firstname: "วิจิตรกมล", lastname: "สารการ", password: "1234", job_position: "เจ้าหน้าที่สรรหา", work_location: "สำนักงานใหญ่", department: "CHA-ENC", start_date: "2022-05-01", phone_number: "0885558866", role: "user", avatar: "" },
+                    { user_id: "ADMIN99", prefix: "นาย", firstname: "สมชาย", lastname: "ใจดี", password: "1234", job_position: "ผู้ดูแลระบบ", work_location: "สำนักงานใหญ่", department: "IT-ADMIN", start_date: "2020-01-15", phone_number: "0812345678", role: "admin", avatar: "" }
+                ];
+                localStorage.setItem('users', JSON.stringify(defaultUsers));
+            }
+            if (!localStorage.getItem('fuels')) {
+                const defaultFuels = [
+                    { id: 1, type: "น้ำมัน", name: "แก๊สโซฮอล์ 95", rate: 3.85 },
+                    { id: 2, type: "น้ำมัน", name: "ดีเซล B7", rate: 3.29 },
+                    { id: 3, type: "ไฟฟ้า", name: "EV Normal Charge", rate: 1.50 },
+                    { id: 4, type: "แก๊ส", name: "NGV", rate: 1.20 }
+                ];
+                localStorage.setItem('fuels', JSON.stringify(defaultFuels));
+            }
+            if (!localStorage.getItem('reports')) {
+                localStorage.setItem('reports', JSON.stringify([]));
+            }
+        });
+
+        function executeLogin() {
+            const u = document.getElementById('username').value.trim();
+            const p = document.getElementById('password').value;
+            const users = JSON.parse(localStorage.getItem('users'));
+            
+            const matchedUser = users.find(user => user.user_id === u && user.password === p);
+
+            if (matchedUser) {
+                localStorage.setItem('session_user_id', matchedUser.user_id);
+                // ใช้ SweetAlert2 แจ้งเตือนความสำเร็จก่อนเปลี่ยนหน้า
+                Swal.fire({
+                    icon: 'success',
+                    title: 'เข้าสู่ระบบสำเร็จ',
+                    text: `ยินดีต้อนรับคุณ ${matchedUser.firstname}`,
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(() => {
+                    window.location.href = matchedUser.role === 'admin' ? 'admin.html' : 'user.html';
+                });
+            } else {
+                // แจ้งเตือนข้อผิดพลาด
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เข้าสู่ระบบล้มเหลว',
+                    text: 'รหัสพนักงานหรือรหัสผ่านไม่ถูกต้อง',
+                    confirmButtonText: 'ตกลง',
+                    confirmButtonColor: '#1A3673'
+                });
+            }
+        }
+    </script>
+</body>
+</html>
