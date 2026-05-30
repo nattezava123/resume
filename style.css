@@ -391,3 +391,31 @@ body {
     width: 100%;
     height: 100%;
 }
+/* =========================================
+   แก้ไขรูปโปรไฟล์และชื่อมุมขวาบน (Header Profile) ไม่ให้ล้น
+========================================= */
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: #eff6ff; /* เพิ่มพื้นหลังสีฟ้าอ่อนนุ่มๆ ให้ดูเด่น */
+    padding: 5px 16px 5px 6px;
+    border: 1px solid #dbeafe;
+    border-radius: 30px;       /* ทำเป็นทรงมนแคปซูลสไตล์ Dashboard */
+}
+
+.avatar-img, #header-avatar {
+    width: 38px !important;        /* กำหนดความกว้างตายตัวพอดีสายตา */
+    height: 38px !important;       /* กำหนดความสูงตายตัวให้เท่ากัน */
+    border-radius: 50% !important;  /* บังคับเป็นวงกลมเป๊ะๆ */
+    object-fit: cover !important;   /* ป้องกันรูปภาพยืดหรือบี้เสียทรง */
+    object-position: center !important; /* จัดโฟกัสให้อยู่กึ่งกลางภาพ */
+    border: 2px solid #ffffff;     /* ขอบสีขาวตัดกับพื้นหลัง */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.user-name, #header-user-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #2563eb; /* ข้อความชื่อสีน้ำเงินเข้ากับธีมระบบ */
+}
