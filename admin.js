@@ -157,22 +157,32 @@ window.editUser = async function(uid) {
 
     Swal.fire({
         title: `แก้ไขข้อมูล: ${uid}`,
-        html: `<input id="swal-edit-fname" class="swal2-input" value="${u.frstname}" placeholder="ชื่อจริง">
-               <input id="swal-edit-lname" class="swal2-input" value="${u.lastname}" placeholder="นามสกุล">
-               <input id="swal-edit-position" class="swal2-input" value="${u.job_position || ''}" placeholder="ตำแหน่ง">
-               <input id="swal-edit-dept" class="swal2-input" value="${u.Department || ''}" placeholder="แผนก">
+        html: `<div style="text-align: left; font-size: 14px; margin-bottom: 5px; padding-left: 10%;">รหัสผ่านใหม่ (เว้นว่างหากไม่เปลี่ยน)</div>
+               <input id="swal-edit-pass" class="swal2-input" placeholder="รหัสผ่านใหม่" type="text" style="width: 80%;">
+               <div style="text-align: left; font-size: 14px; margin-top: 15px; margin-bottom: 5px; padding-left: 10%;">ข้อมูลส่วนตัวพนักงาน</div>
+               <input id="swal-edit-fname" class="swal2-input" value="${u.frstname}" placeholder="ชื่อจริง" style="width: 80%;">
+               <input id="swal-edit-lname" class="swal2-input" value="${u.lastname}" placeholder="นามสกุล" style="width: 80%;">
+               <input id="swal-edit-position" class="swal2-input" value="${u.job_position || ''}" placeholder="ตำแหน่ง" style="width: 80%;">
+               <input id="swal-edit-phone" class="swal2-input" value="${u.Phone_number || ''}" placeholder="เบอร์โทรศัพท์" style="width: 80%;">
+               <input id="swal-edit-dept" class="swal2-input" value="${u.Department || ''}" placeholder="แผนก" style="width: 80%;">
                <select id="swal-edit-role" class="swal2-input" style="width: 80%;"><option value="user" ${u.role==='user'?'selected':''}>User</option><option value="admin" ${u.role==='admin'?'selected':''}>Admin</option></select>`,
-        showCancelButton: true, confirmButtonText: 'บันทึก'
+        showCancelButton: true, confirmButtonText: 'บันทึก', confirmButtonColor: '#f59e0b'
     }).then(async (result) => {
         if (result.isConfirmed) {
-            await updateDoc(doc(db, "users", uid), {
+            let updateData = {
                 frstname: document.getElementById('swal-edit-fname').value, 
                 lastname: document.getElementById('swal-edit-lname').value, 
                 job_position: document.getElementById('swal-edit-position').value,
                 Department: document.getElementById('swal-edit-dept').value,
+                Phone_number: document.getElementById('swal-edit-phone').value,
                 role: document.getElementById('swal-edit-role').value
-            });
-            renderEmployeeList(); Swal.fire('บันทึกสำเร็จ', '', 'success');
+            };
+            
+            let newPass = document.getElementById('swal-edit-pass').value.trim();
+            if(newPass !== '') { updateData.password = newPass; }
+
+            await updateDoc(doc(db, "users", uid), updateData);
+            renderEmployeeList(); Swal.fire('บันทึกสำเร็จ', 'อัปเดตข้อมูลพนักงานเรียบร้อย', 'success');
         }
     });
 }
@@ -246,17 +256,27 @@ async function renderApprovalQueue() {
     pendingReports.forEach(r => {
         let u = usersMap[r.user_id] || {};
         let actionButtons = `<div class="mt-3"><button class="btn-pill btn-green me-2 py-1 px-3" onclick="window.processApproval('${r.id}', 'Y')">✔️ อนุมัติ</button><button class="btn-pill btn-red py-1 px-3" onclick="window.processApproval('${r.id}', 'N')">❌ ไม่อนุมัติ</button></div>`;
-        let proofImg = r.Image_file ? `<img src="${r.Image_file}" class="receipt-img" style="max-width:200px; max-height:150px; cursor:pointer;" onclick="window.open('${r.Image_file}')">` : '<span class="text-muted">ไม่มีรูปแนบ</span>';
+        
+        // ทำให้ภาพหลักฐานเป็นลิงก์คลิกดูรูปใหญ่ได้
+        let proofImgHtml = '<span class="text-muted">ไม่มีรูปแนบ</span>';
+        if (r.Image_file) {
+            proofImgHtml = `<a href="${r.Image_file}" target="_blank" rel="noopener noreferrer" class="clickable-image-link" title="คลิกเพื่อดูรูปใหญ่ในแท็บใหม่"><img src="${r.Image_file}" class="receipt-image-thumbnail" alt="หลักฐานแนบ"></a>`;
+        }
+
+        let requestorAvatar = u.Image_file || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150";
         
         container.innerHTML += `<div class="white-card d-flex justify-content-between align-items-center mb-3 p-3 border rounded shadow-sm">
-            <div>
-                <div class="fw-bold fs-5 text-dark">ผู้ขอเบิก: ${u.frstname || 'ไม่ทราบชื่อ'} (${r.user_id})</div>
-                <div class="text-secondary mt-1">วันที่ทำงาน: <strong>${r.work_date} (${r.work_time || ''})</strong></div>
-                <div class="text-secondary">รายละเอียด: ${r.work_detail}</div>
-                <div class="mt-2 text-primary fw-bold">ระยะทาง: ${r.distance_km} กม. | ยอดเงินเบิก: ฿${r.Reimbursable_expense}</div>
-                ${actionButtons}
+            <div class="d-flex align-items-center gap-3">
+                <img src="${requestorAvatar}" class="avatar-sm" alt="รูปโปรไฟล์ผู้ขอเบิก">
+                <div>
+                    <div class="fw-bold fs-5 text-dark">ผู้ขอเบิก: ${u.frstname || 'ไม่ทราบชื่อ'} (${r.user_id})</div>
+                    <div class="text-secondary mt-1">วันที่ทำงาน: <strong>${r.work_date} (${r.work_time || ''})</strong></div>
+                    <div class="text-secondary">รายละเอียด: ${r.work_detail}</div>
+                    <div class="mt-2 text-primary fw-bold">ระยะทาง: ${r.distance_km} กม. | ยอดเงินเบิก: ฿${r.Reimbursable_expense}</div>
+                    ${actionButtons}
+                </div>
             </div>
-            <div class="text-center">${proofImg}</div>
+            <div class="receipt-image-container">${proofImgHtml}</div>
         </div>`;
     });
 }
@@ -280,22 +300,43 @@ window.processApproval = function(reportId, newStatus) {
 }
 
 async function loadFuelSettings() {
-    const tbody = document.getElementById('admin-fuel-tbody'); tbody.innerHTML = '<tr><td colspan="4">กำลังโหลดข้อมูลราคาน้ำมัน...</td></tr>';
+    const tbody = document.getElementById('admin-fuel-tbody'); tbody.innerHTML = '<tr><td colspan="5">กำลังโหลดข้อมูลราคาน้ำมัน...</td></tr>';
     const q = await getDocs(collection(db, "fuels"));
     tbody.innerHTML = '';
     q.forEach(docSnap => {
         const f = docSnap.data();
-        tbody.innerHTML += `<tr><td>${f.id}</td><td><strong>${f.name}</strong></td><td>${f.rate} บาท/กม.</td><td><button class="btn-pill btn-red py-1 px-2" style="font-size:12px;" onclick="window.deleteFuel('${f.id}')">🗑️ ลบ</button></td></tr>`;
+        tbody.innerHTML += `<tr>
+            <td>${f.id}</td><td>${f.type || 'ทั่วไป'}</td><td><strong>${f.name}</strong></td>
+            <td><input type="number" step="0.01" class="form-control fuel-rate-input text-center mx-auto" data-id="${f.id}" value="${f.rate}" style="max-width:150px;"></td>
+            <td><button class="btn-pill btn-red py-1 px-2" style="font-size:12px;" onclick="window.deleteFuel('${f.id}')">🗑️ ลบ</button></td>
+        </tr>`;
     });
+}
+
+window.updateFuelPrices = async function() {
+    const inputs = document.querySelectorAll('.fuel-rate-input');
+    Swal.fire({ title: 'กำลังบันทึกข้อมูล...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+    try {
+        for (let input of inputs) {
+            let id = input.getAttribute('data-id');
+            let newRate = parseFloat(input.value) || 0;
+            await updateDoc(doc(db, "fuels", id), { rate: newRate });
+        }
+        Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', text: 'อัปเดตเรทราคาเชื้อเพลิงทั้งหมดเรียบร้อยแล้ว' });
+        loadFuelSettings();
+    } catch(e) {
+        Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error');
+    }
 }
 
 window.addNewFuel = function() {
     Swal.fire({
         title: 'เพิ่มประเภทเชื้อเพลิง/ราคากลาง',
         html: `<input id="swal-f-name" class="swal2-input" placeholder="เช่น ดีเซล B7, รถส่วนตัว">
-               <input id="swal-f-rate" class="swal2-input" type="number" step="0.01" placeholder="บาท ต่อ กิโลเมตร">`,
+               <input id="swal-f-rate" class="swal2-input" type="number" step="0.01" placeholder="บาท ต่อ กิโลเมตร">
+               <select id="swal-f-type" class="swal2-input" style="width: 80%;"><option value="น้ำมัน">น้ำมัน</option><option value="ไฟฟ้า">ไฟฟ้า</option><option value="แก๊ส">แก๊ส</option></select>`,
         showCancelButton: true, confirmButtonText: 'บันทึก',
-        preConfirm: () => { return { name: document.getElementById('swal-f-name').value, rate: parseFloat(document.getElementById('swal-f-rate').value) } }
+        preConfirm: () => { return { name: document.getElementById('swal-f-name').value, rate: parseFloat(document.getElementById('swal-f-rate').value), type: document.getElementById('swal-f-type').value } }
     }).then(async (result) => {
         if(result.isConfirmed && result.value.name && !isNaN(result.value.rate)) {
             let id = "FUEL" + Date.now();
