@@ -347,3 +347,47 @@ body {
         padding: 8px !important;
     }
 }
+/* style.css */
+
+/* --- ข้อ 1: แก้ไขรูปโปรไฟล์ overflow --- */
+
+/* กำหนดขนาดสูงสุดสำหรับรูปโปรไฟล์ทั้งหมดโดยรวม */
+.avatar, .avatar-sm, .admin-user-tbody img, .user-list-tbody img, #header-avatar {
+    max-width: 100% !important; /* ห้ามเกินขนาด container */
+    max-height: 100% !important;
+    object-fit: cover; /* ป้องกันภาพบิดเบี้ยว */
+}
+
+/* กำหนดขนาดที่แน่นอนสำหรับหน้าแก้ไขโปรไฟล์พนักงานและแอดมิน เพื่อให้ภาพมีขนาดพอดี */
+#adm-avatar-display, #profile-avatar-display {
+    max-width: 130px;
+    max-height: 130px;
+    object-fit: cover;
+}
+
+
+/* --- ข้อ 2: เพิ่มการแสดงผลรูปภาพหลักฐาน --- */
+
+/* กำหนดขนาดรูปภาพหลักฐานแบบย่อหน้าจอ (Thumbnail) ในคิวการอนุมัติ */
+.receipt-image-thumbnail {
+    max-width: 200px;
+    max-height: 150px;
+    cursor: pointer;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    transition: transform 0.2s; /* เพิ่มเอฟเฟกต์เวลาเอาเมาส์ไปวาง */
+    object-fit: cover; /* ป้องกันภาพบิดเบี้ยว */
+}
+
+/* เพิ่มเอฟเฟกต์เวลาเอาเมาส์ไปวางบนรูปภาพ เพื่อให้ผู้ใช้รู้ว่าคลิกได้ */
+.receipt-image-thumbnail:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* กำหนดให้พื้นที่ของรูปภาพทั้งหมดเป็นลิงก์ที่คลิกได้ */
+.clickable-image-link {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
