@@ -30,6 +30,7 @@
 
             <div class="view-body p-4" style="height: calc(100vh - 70px); overflow-y: auto;">
                 
+                <!-- แท็บ: ข้อมูลส่วนตัวแอดมิน -->
                 <div id="adm-profile-view" class="adm-tab-view">
                     <div class="blue-panel">
                         <h4 class="fw-bold mb-4">👤 แก้ไขข้อมูลส่วนตัว (ผู้ดูแลระบบ)</h4>
@@ -57,11 +58,13 @@
                     </div>
                 </div>
 
+                <!-- แท็บ: อนุมัติเบิกจ่าย -->
                 <div id="adm-approves-view" class="adm-tab-view" style="display:none;">
                     <h4 class="fw-bold text-dark mb-4">📋 รายการรอยืนยันอนุมัติค่าเดินทาง</h4>
                     <div id="admin-verification-queue"></div>
                 </div>
 
+                <!-- แท็บ: ตั้งค่าราคาน้ำมัน -->
                 <div id="adm-prices-view" class="adm-tab-view" style="display:none;">
                     <div class="white-card p-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -69,14 +72,17 @@
                             <button class="btn-pill btn-blue" onclick="window.addNewFuel()">➕ เพิ่มเรทราคาใหม่</button>
                         </div>
                         <div class="table-responsive">
-                            <table class="table table-bordered table-striped align-middle">
+                            <table class="table table-bordered table-striped align-middle text-center">
                                 <thead class="table-dark"><tr><th>รหัส</th><th>กลุ่มเชื้อเพลิง</th><th>ชื่อประเภทรถ / เชื้อเพลิง</th><th>อัตราจ่าย (บาท/กม.)</th><th>การจัดการ</th></tr></thead>
                                 <tbody id="admin-fuel-tbody"></tbody>
                             </table>
                         </div>
+                        <!-- คืนค่าปุ่มบันทึกราคาน้ำมันแบบกลุ่ม -->
+                        <div class="text-center mt-4"><button class="btn-pill btn-white px-4" onclick="window.updateFuelPrices()">💾 บันทึกอัตราอัปเดต</button></div>
                     </div>
                 </div>
 
+                <!-- แท็บ: จัดการพนักงาน -->
                 <div id="adm-users-view" class="adm-tab-view" style="display:none;">
                     <div class="white-card p-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -92,6 +98,7 @@
                     </div>
                 </div>
 
+                <!-- แท็บ: ออกรายงาน -->
                 <div id="adm-reports-view" class="adm-tab-view" style="display:none;">
                     <div class="white-card p-4">
                         <div class="d-flex justify-content-between align-items-center mb-4 no-print">
@@ -112,13 +119,13 @@
 
                         <div class="table-responsive">
                             <table class="table table-bordered align-middle text-center">
-                                <thead class="table-primary"><tr><th>วันที่</th><th>รหัสพนักงาน</th><th>ชื่องาน / รายละเอียด</th><th>ประเภทรถ/เชื้อเพลิง</th><th>ระยะทาง (กม.)</th><th>ยอดเงินเบิก (บาท)</th><th>สถานะ</th></tr></thead>
+                                <thead class="table-primary"><tr><th>Tanggal</th><th>รหัสพนักงาน</th><th>ชื่องาน / รายละเอียด</th><th>ประเภทรถ/เชื้อเพลิง</th><th>ระยะทาง (กม.)</th><th>ยอดเงินเบิก (บาท)</th><th>สถานะ</th></tr></thead>
                                 <tbody id="admin-reports-tbody"></tbody>
                             </table>
                         </div>
 
                         <div class="mt-4 p-4 border rounded bg-light ms-auto" id="report-summary-box" style="max-width: 450px; border-top: 4px solid #2563eb !important;">
-                            <h5 class=\"fw-bold mb-3 pb-2 text-primary border-bottom\">🧾 สรุปยอดรายละเอียดค่าใช้จ่าย</h5>
+                            <h5 class="fw-bold mb-3 pb-2 text-primary border-bottom">🧾 สรุปยอดรายละเอียดค่าใช้จ่าย</h5>
                             <div class="d-flex justify-content-between mb-2"><span>จำนวนรายการเบิกในระบบ:</span><span class="fw-bold text-dark" id="rep-sum-count">0 รายการ</span></div>
                             <div class="d-flex justify-content-between mb-2"><span>ระยะทางรวมสุทธิ:</span><span class="fw-bold text-dark" id="rep-sum-km">0 กม.</span></div>
                             <div class="d-flex justify-content-between pt-2 border-top fs-5 fw-bold text-dark"><span>ยอดเงินรวมทั้งสิ้น:</span><span class="text-success" id="rep-sum-total">฿0.00</span></div>

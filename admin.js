@@ -144,6 +144,7 @@ window.deleteUser = function(uid) {
     });
 }
 
+// แก้ไขฟังก์ชันแก้ไขข้อมูลพนักงานให้มีช่องรหัสผ่านและเบอร์โทรครบถ้วน
 window.editUser = async function(uid) {
     const docSnap = await getDoc(doc(db, "users", uid));
     if(!docSnap.exists()) return;
@@ -151,20 +152,29 @@ window.editUser = async function(uid) {
 
     Swal.fire({
         title: `แก้ไขข้อมูล: ${uid}`,
-        html: `<input id="swal-edit-fname" class="swal2-input" value="${u.firstname}" placeholder="ชื่อจริง">
-               <input id="swal-edit-lname" class="swal2-input" value="${u.lastname}" placeholder="นามสกุล">
-               <input id="swal-edit-position" class="swal2-input" value="${u.job_position || ''}" placeholder="ตำแหน่ง">
+        html: `<div style="text-align: left; font-size: 14px; margin-bottom: 5px; padding-left: 10%;">รหัสผ่านใหม่ (เว้นว่างหากไม่เปลี่ยน)</div>
+               <input id="swal-edit-pass" class="swal2-input" placeholder="รหัสผ่านใหม่" type="text" style="width: 80%;">
+               <div style="text-align: left; font-size: 14px; margin-top: 15px; margin-bottom: 5px; padding-left: 10%;">ข้อมูลส่วนตัวพนักงาน</div>
+               <input id="swal-edit-fname" class="swal2-input" value="${u.firstname}" placeholder="ชื่อจริง" style="width: 80%;">
+               <input id="swal-edit-lname" class="swal2-input" value="${u.lastname}" placeholder="นามสกุล" style="width: 80%;">
+               <input id="swal-edit-position" class="swal2-input" value="${u.job_position || ''}" placeholder="ตำแหน่ง" style="width: 80%;">
+               <input id="swal-edit-phone" class="swal2-input" value="${u.Phone_number || ''}" placeholder="เบอร์โทรศัพท์" style="width: 80%;">
                <select id="swal-edit-role" class="swal2-input" style="width: 80%;"><option value="user" ${u.role==='user'?'selected':''}>User</option><option value="admin" ${u.role==='admin'?'selected':''}>Admin</option></select>`,
-        showCancelButton: true, confirmButtonText: 'บันทึก'
+        showCancelButton: true, confirmButtonText: 'บันทึก', confirmButtonColor: '#f59e0b'
     }).then(async (result) => {
         if (result.isConfirmed) {
-            await updateDoc(doc(db, "users", uid), {
+            let updateData = {
                 firstname: document.getElementById('swal-edit-fname').value, 
                 lastname: document.getElementById('swal-edit-lname').value, 
                 job_position: document.getElementById('swal-edit-position').value,
+                Phone_number: document.getElementById('swal-edit-phone').value,
                 role: document.getElementById('swal-edit-role').value
-            });
-            renderEmployeeList(); Swal.fire('บันทึกสำเร็จ', '', 'success');
+            };
+            let newPass = document.getElementById('swal-edit-pass').value.trim();
+            if(newPass !== '') { updateData.password = newPass; }
+
+            await updateDoc(doc(db, "users", uid), updateData);
+            renderEmployeeList(); Swal.fire('บันทึกสำเร็จ', 'อัปเดตข้อมูลพนักงานเรียบร้อย', 'success');
         }
     });
 }
@@ -271,14 +281,38 @@ window.processApproval = function(reportId, newStatus) {
     }
 }
 
+// ปรับปรุงช่องเรทราคาให้แก้ไขพิมพ์ตัวเลขได้
 async function loadFuelSettings() {
     const tbody = document.getElementById('admin-fuel-tbody'); tbody.innerHTML = '<tr><td colspan="5">กำลังโหลดข้อมูลราคาน้ำมัน...</td></tr>';
     const q = await getDocs(collection(db, "fuels"));
     tbody.innerHTML = '';
     q.forEach(docSnap => {
         const f = docSnap.data();
-        tbody.innerHTML += `<tr><td>${f.id}</td><td>${f.type}</td><td><strong>${f.name}</strong></td><td>${f.rate} บาท/กม.</td><td><button class="btn-pill btn-red py-1 px-2" style="font-size:12px;" onclick="window.deleteFuel('${f.id}')">🗑️ ลบ</button></td></tr>`;
+        tbody.innerHTML += `<tr>
+            <td>${f.id}</td>
+            <td>${f.type}</td>
+            <td><strong>${f.name}</strong></td>
+            <td><input type="number" step="0.01" class="form-control fuel-rate-input text-center mx-auto" data-id="${f.id}" value="${f.rate}" style="max-width:150px;"></td>
+            <td><button class="btn-pill btn-red py-1 px-2" style="font-size:12px;" onclick="window.deleteFuel('${f.id}')">🗑️ ลบ</button></td>
+        </tr>`;
     });
+}
+
+// ฟังก์ชันสำหรับบันทึกเรทราคากลางแบบกลุ่มลงฐานข้อมูล Firebase
+window.updateFuelPrices = async function() {
+    const inputs = document.querySelectorAll('.fuel-rate-input');
+    Swal.fire({ title: 'กำลังบันทึกข้อมูล...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+    try {
+        for (let input of inputs) {
+            let id = input.getAttribute('data-id');
+            let newRate = parseFloat(input.value) || 0;
+            await updateDoc(doc(db, "fuels", id), { rate: newRate });
+        }
+        Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', text: 'อัปเดตเรทราคาเชื้อเพลิงทั้งหมดเรียบร้อยแล้ว' });
+        loadFuelSettings();
+    } catch(e) {
+        Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error');
+    }
 }
 
 window.addNewFuel = function() {

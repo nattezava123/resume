@@ -178,9 +178,23 @@ window.renderUserReports = async function() {
         tbody.innerHTML += `<tr><td>${idx + 1}</td><td>${r.work_date}</td><td>${r.work_detail}</td><td>${r.fuel_type || 'ทั่วไป'}</td><td>${r.distance_km} กม.</td><td class="text-success">฿${r.Reimbursable_expense}</td><td><span class="status-tag status-${r.Approve_disbursement}">${statusText}</span></td><td>${actionBtns}</td></tr>`;
     });
     
+ // (โค้ดเดิมด้านบน... คำนวณ filteredCount ฯลฯ)
     document.getElementById('user-bill-count').innerText = `${filteredCount} รายการ`; 
     document.getElementById('user-bill-km').innerText = `${filteredKm.toFixed(2)} กม.`; 
     document.getElementById('user-bill-total').innerText = `฿${filteredBaht.toFixed(2)}`;
+
+    // === แปะเพิ่มส่วนนี้ เพื่อดันตัวเลขเข้ากล่องการ์ดสวยๆ ด้านบน ===
+    let allTimeBaht = 0;
+    let allTimeKm = 0;
+    myReports.forEach(r => {
+        if(r.Approve_disbursement === 'Y' || r.Approve_disbursement === 'P') { 
+            allTimeBaht += parseFloat(r.Reimbursable_expense) || 0; 
+            allTimeKm += parseFloat(r.distance_km) || 0; 
+        }
+    });
+    if(document.getElementById('sum-total')) document.getElementById('sum-total').innerText = allTimeBaht.toFixed(2);
+    if(document.getElementById('sum-km')) document.getElementById('sum-km').innerText = allTimeKm.toFixed(2);
+    if(document.getElementById('sum-month-km')) document.getElementById('sum-month-km').innerText = filteredKm.toFixed(2);
 }
 
 window.deleteReport = function(id) {
