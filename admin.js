@@ -1,334 +1,308 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyAADUqPrDtltsOiTXJ5AcQ07tkWAJdBa54",
+    authDomain: "chanchai-office.firebaseapp.com",
+    projectId: "chanchai-office",
+    storageBucket: "chanchai-office.firebasestorage.app",
+    messagingSenderId: "933936461367",
+    appId: "1:933936461367:web:4500e6c940133dc5b2b1b2",
+    measurementId: "G-9M8LCDB6KV"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 let adminSessionId = localStorage.getItem('session_user_id');
 
 document.addEventListener("DOMContentLoaded", () => {
     if (!adminSessionId) { window.location.href = 'login.html'; return; }
     updateHeaderDisplay();
-    switchAdminTab('profile'); 
+    window.switchAdminTab('profile'); 
+    
+    document.getElementById('report-filter-user').addEventListener('change', window.renderAllReports);
+    document.getElementById('report-filter-month').addEventListener('change', window.renderAllReports);
 });
 
-function updateHeaderDisplay() {
-    const users = JSON.parse(localStorage.getItem('users'));
-    const u = users.find(user => user.user_id === adminSessionId);
-    if(u) {
+async function updateHeaderDisplay() {
+    const docSnap = await getDoc(doc(db, "users", adminSessionId));
+    if(docSnap.exists()) {
+        const u = docSnap.data();
         document.getElementById('header-user-name').innerText = `${u.firstname} ${u.lastname}`;
         document.getElementById('header-avatar').src = u.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150";
     }
 }
 
-function switchAdminTab(tabName) {
+window.switchAdminTab = function(tabName) {
     document.querySelectorAll('.adm-tab-view').forEach(view => view.style.display = 'none');
     document.querySelectorAll('.sidebar .menu-item').forEach(item => item.classList.remove('active'));
     document.getElementById(`adm-${tabName}-view`).style.display = 'block';
-    document.getElementById(`menu-${tabName}`).classList.add('active');
+    if(document.getElementById(`menu-${tabName}`)) document.getElementById(`menu-${tabName}`).classList.add('active');
     
     if(tabName === 'profile') loadAdminProfile();
     if(tabName === 'users') renderEmployeeList();
     if(tabName === 'prices') loadFuelSettings();
     if(tabName === 'approves') renderApprovalQueue();
-    if(tabName === 'reports') {
-        populateReportUserDropdown(); // โหลดรายชื่อตัวคัดกรองก่อนแสดงผล
-        renderAllReports();
-    }
+    if(tabName === 'reports') { populateReportUserDropdown().then(window.renderAllReports); }
 }
 
-function loadAdminProfile() {
-    const users = JSON.parse(localStorage.getItem('users'));
-    const u = users.find(user => user.user_id === adminSessionId);
-    if(u) {
+async function loadAdminProfile() {
+    const docSnap = await getDoc(doc(db, "users", adminSessionId));
+    if(docSnap.exists()) {
+        const u = docSnap.data();
         document.getElementById('adm-prefix').value = u.prefix || "นาย";
         document.getElementById('adm-firstname').value = u.firstname;
         document.getElementById('adm-lastname').value = u.lastname;
         document.getElementById('adm-userid').value = u.user_id;
         document.getElementById('adm-password').value = u.password;
-        document.getElementById('adm-phone').value = u.phone_number;
+        document.getElementById('adm-phone').value = u.Phone_number || "";
         document.getElementById('adm-avatar-display').src = u.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150";
     }
 }
 
-function updateAdminProfile() {
-    let users = JSON.parse(localStorage.getItem('users'));
-    const idx = users.findIndex(user => user.user_id === adminSessionId);
-    if(idx !== -1) {
-        const executeUpdate = (base64Img) => {
-            users[idx].prefix = document.getElementById('adm-prefix').value;
-            users[idx].firstname = document.getElementById('adm-firstname').value.trim();
-            users[idx].lastname = document.getElementById('adm-lastname').value.trim();
-            users[idx].password = document.getElementById('adm-password').value;
-            users[idx].phone_number = document.getElementById('adm-phone').value.trim();
-            if(base64Img) users[idx].avatar = base64Img; 
-            
-            localStorage.setItem('users', JSON.stringify(users));
-            document.getElementById('adm-avatar-display').src = users[idx].avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150";
-            document.getElementById('adm-avatar').value = ''; 
-            updateHeaderDisplay();
-            Swal.fire({ icon: 'success', title: 'อัปเดตสำเร็จ', text: 'บันทึกข้อมูลเรียบร้อย', confirmButtonColor: '#2563eb' });
+window.updateAdminProfile = async function() {
+    const executeUpdate = async (base64Img) => {
+        let updateData = {
+            prefix: document.getElementById('adm-prefix').value,
+            firstname: document.getElementById('adm-firstname').value.trim(),
+            lastname: document.getElementById('adm-lastname').value.trim(),
+            password: document.getElementById('adm-password').value,
+            Phone_number: document.getElementById('adm-phone').value.trim()
         };
+        if(base64Img) updateData.avatar = base64Img;
+        
+        await updateDoc(doc(db, "users", adminSessionId), updateData);
+        if(base64Img) document.getElementById('adm-avatar-display').src = base64Img;
+        document.getElementById('adm-avatar').value = ''; 
+        updateHeaderDisplay();
+        Swal.fire({ icon: 'success', title: 'อัปเดตสำเร็จ', text: 'บันทึกข้อมูลเรียบร้อย' });
+    };
 
-        const fileInput = document.getElementById('adm-avatar');
-        if (fileInput.files.length > 0) {
-            const reader = new FileReader();
-            reader.onload = function(e) { executeUpdate(e.target.result); };
-            reader.readAsDataURL(fileInput.files[0]);
-        } else {
-            executeUpdate(null);
-        }
-    }
+    const fileInput = document.getElementById('adm-avatar');
+    if (fileInput.files.length > 0) {
+        const reader = new FileReader();
+        reader.onload = function(e) { executeUpdate(e.target.result); };
+        reader.readAsDataURL(fileInput.files[0]);
+    } else { executeUpdate(null); }
 }
 
-function renderEmployeeList() {
-    const users = JSON.parse(localStorage.getItem('users')) || [];
+async function renderEmployeeList() {
     const tbody = document.getElementById('admin-user-tbody');
-    tbody.innerHTML = '';
+    tbody.innerHTML = '<tr><td colspan="7">กำลังโหลดข้อมูล...</td></tr>';
     
-    users.forEach((u, idx) => {
-        let actionBtns = u.user_id === adminSessionId ? '<span class="text-muted" style="font-size:12px;">(บัญชีของคุณ)</span>' : `<button class="btn-pill btn-edit py-1 px-2 me-1" style="font-size:12px;" onclick="editUser('${u.user_id}')">✏️ แก้ไข</button> <button class="btn-pill btn-red py-1 px-2" style="font-size:12px;" onclick="deleteUser('${u.user_id}')">🗑️ ลบ</button>`;
+    const querySnapshot = await getDocs(collection(db, "users"));
+    tbody.innerHTML = '';
+    let idx = 1;
+    querySnapshot.forEach((docSnap) => {
+        const u = docSnap.data();
+        let actionBtns = u.user_id === adminSessionId ? '<span class="text-muted" style="font-size:12px;">(บัญชีของคุณ)</span>' : `<button class="btn-pill btn-edit py-1 px-2 me-1" style="font-size:12px;" onclick="window.editUser('${u.user_id}')">✏️ แก้ไข</button> <button class="btn-pill btn-red py-1 px-2" style="font-size:12px;" onclick="window.deleteUser('${u.user_id}')">🗑️ ลบ</button>`;
         let roleBadge = u.role === 'admin' ? '<span class="badge bg-primary">Admin</span>' : '<span class="badge bg-secondary">User</span>';
         let avatarImg = u.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150";
-        
-        tbody.innerHTML += `<tr><td>${idx + 1}</td><td><img src="${avatarImg}" class="avatar-sm"></td><td><strong>${u.user_id}</strong> <br>${roleBadge}</td><td>${u.prefix || ''}${u.firstname} ${u.lastname}</td><td>${u.job_position || 'พนักงาน'}</td><td>${u.phone_number || '-'}</td><td>${actionBtns}</td></tr>`;
+        tbody.innerHTML += `<tr><td>${idx++}</td><td><img src="${avatarImg}" class="avatar-sm"></td><td><strong>${u.user_id}</strong> <br>${roleBadge}</td><td>${u.prefix || ''}${u.firstname} ${u.lastname}</td><td>${u.job_position || 'พนักงาน'}</td><td>${u.Phone_number || '-'}</td><td>${actionBtns}</td></tr>`;
     });
 }
 
-function addNewUser() {
+window.addNewUser = function() {
     Swal.fire({
         title: 'เพิ่มพนักงานใหม่',
-        html: `
-            <input id="swal-uid" class="swal2-input" placeholder="รหัสพนักงาน (Username)" style="width: 80%;">
-            <input id="swal-pass" class="swal2-input" placeholder="รหัสผ่าน (Password)" type="text" style="width: 80%;">
-            <input id="swal-fname" class="swal2-input" placeholder="ชื่อจริง" style="width: 80%;">
-            <input id="swal-lname" class="swal2-input" placeholder="นามสกุล" style="width: 80%;">
-            <input id="swal-position" class="swal2-input" placeholder="ตำแหน่งงาน" style="width: 80%;">
-            <input id="swal-phone" class="swal2-input" placeholder="เบอร์โทรศัพท์" style="width: 80%;">
-            <div style="text-align: left; font-size: 14px; margin-top: 15px; margin-bottom: 5px; padding-left: 10%;">อัปโหลดรูปโปรไฟล์ (ไม่บังคับ)</div>
-            <input id="swal-avatar" class="form-control" type="file" accept="image/*" style="width: 80%; margin: 0 auto;">
-            <select id="swal-role" class="swal2-input" style="width: 80%;">
-                <option value="user">สิทธิ์: พนักงานทั่วไป (User)</option><option value="admin">สิทธิ์: ผู้ดูแลระบบ (Admin)</option>
-            </select>
-        `,
-        confirmButtonText: 'บันทึกข้อมูล', showCancelButton: true, cancelButtonText: 'ยกเลิก', confirmButtonColor: '#2563eb',
+        html: `<input id="swal-uid" class="swal2-input" placeholder="รหัสพนักงาน (Username)" style="width: 80%;">
+               <input id="swal-pass" class="swal2-input" placeholder="รหัสผ่าน (Password)" style="width: 80%;">
+               <input id="swal-fname" class="swal2-input" placeholder="ชื่อจริง" style="width: 80%;">
+               <input id="swal-lname" class="swal2-input" placeholder="นามสกุล" style="width: 80%;">
+               <input id="swal-position" class="swal2-input" placeholder="ตำแหน่งงาน" style="width: 80%;">
+               <input id="swal-dept" class="swal2-input" placeholder="แผนก" style="width: 80%;">
+               <input id="swal-loc" class="swal2-input" placeholder="สถานที่ปฏิบัติงาน" style="width: 80%;">
+               <input id="swal-phone" class="swal2-input" placeholder="เบอร์โทรศัพท์" style="width: 80%;">
+               <input id="swal-sdate" class="swal2-input" type="date" style="width: 80%;">
+               <select id="swal-role" class="swal2-input" style="width: 80%;"><option value="user">User</option><option value="admin">Admin</option></select>`,
+        showCancelButton: true, confirmButtonText: 'บันทึก',
         preConfirm: () => {
             const uid = document.getElementById('swal-uid').value.trim();
-            const pass = document.getElementById('swal-pass').value.trim();
-            const fname = document.getElementById('swal-fname').value.trim();
-            if(!uid || !pass || !fname) { Swal.showValidationMessage('กรุณากรอก รหัสพนักงาน, รหัสผ่าน และชื่อ ให้ครบถ้วน'); }
-            
+            if(!uid) { Swal.showValidationMessage('กรุณากรอกรหัสพนักงาน'); return false; }
             return {
-                user_id: uid, password: pass, firstname: fname, 
-                lastname: document.getElementById('swal-lname').value.trim(),
-                job_position: document.getElementById('swal-position').value.trim() || 'พนักงานทั่วไป', 
-                phone_number: document.getElementById('swal-phone').value.trim() || '-',
-                avatarFile: document.getElementById('swal-avatar').files[0], 
-                role: document.getElementById('swal-role').value,
-                prefix: 'นาย', work_location: 'สำนักงานใหญ่', department: 'ทั่วไป'
+                user_id: uid, password: document.getElementById('swal-pass').value, firstname: document.getElementById('swal-fname').value, lastname: document.getElementById('swal-lname').value,
+                job_position: document.getElementById('swal-position').value || 'พนักงานทั่วไป', Department: document.getElementById('swal-dept').value || '-', work_location: document.getElementById('swal-loc').value || '-', Phone_number: document.getElementById('swal-phone').value || '-', start_date: document.getElementById('swal-sdate').value || '', role: document.getElementById('swal-role').value
             }
         }
-    }).then((result) => {
+    }).then(async (result) => {
         if (result.isConfirmed) {
             let data = result.value;
-            let users = JSON.parse(localStorage.getItem('users'));
-            if(users.find(u => u.user_id === data.user_id)) { Swal.fire('ข้อผิดพลาด', 'รหัสพนักงานนี้มีอยู่ในระบบแล้ว!', 'error'); return; }
-            
-            const finishSave = (base64) => {
-                data.avatar = base64 || "";
-                delete data.avatarFile; 
-                users.push(data);
-                localStorage.setItem('users', JSON.stringify(users));
-                renderEmployeeList();
-                Swal.fire('สำเร็จ', 'เพิ่มพนักงานใหม่เรียบร้อย', 'success');
-            };
-
-            if(data.avatarFile) {
-                const reader = new FileReader();
-                reader.onload = e => finishSave(e.target.result);
-                reader.readAsDataURL(data.avatarFile);
-            } else { finishSave(""); }
+            const existing = await getDoc(doc(db, "users", data.user_id));
+            if(existing.exists()){ return Swal.fire('ข้อผิดพลาด', 'รหัสพนักงานนี้มีอยู่แล้ว!', 'error'); }
+            data.avatar = "";
+            await setDoc(doc(db, "users", data.user_id), data);
+            renderEmployeeList();
+            Swal.fire('สำเร็จ', 'เพิ่มพนักงานใหม่เรียบร้อย', 'success');
         }
     });
 }
 
-function editUser(uid) {
-    let users = JSON.parse(localStorage.getItem('users'));
-    let u = users.find(x => x.user_id === uid);
-    if(!u) return;
+window.deleteUser = function(uid) {
+    Swal.fire({ title: 'ต้องการลบพนักงานคนนี้ใช่หรือไม่?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ลบทิ้ง' }).then(async (result) => {
+        if (result.isConfirmed) { await deleteDoc(doc(db, "users", uid)); renderEmployeeList(); Swal.fire('ลบสำเร็จ', '', 'success'); }
+    });
+}
+
+window.editUser = async function(uid) {
+    const docSnap = await getDoc(doc(db, "users", uid));
+    if(!docSnap.exists()) return;
+    let u = docSnap.data();
 
     Swal.fire({
         title: `แก้ไขข้อมูล: ${uid}`,
-        html: `
-            <div style="text-align: left; font-size: 14px; margin-bottom: 5px; padding-left: 10%;">รหัสผ่านใหม่ (เว้นว่างไว้หากไม่เปลี่ยน)</div>
-            <input id="swal-edit-pass" class="swal2-input" placeholder="รหัสผ่านใหม่" type="text" style="width: 80%;">
-            <div style="text-align: left; font-size: 14px; margin-top: 15px; margin-bottom: 5px; padding-left: 10%;">ชื่อ - นามสกุล</div>
-            <input id="swal-edit-fname" class="swal2-input" placeholder="ชื่อจริง" value="${u.firstname}" style="width: 80%;">
-            <input id="swal-edit-lname" class="swal2-input" placeholder="นามสกุล" value="${u.lastname}" style="width: 80%;">
-            <div style="text-align: left; font-size: 14px; margin-top: 15px; margin-bottom: 5px; padding-left: 10%;">ตำแหน่งงาน และ เบอร์โทรศัพท์</div>
-            <input id="swal-edit-position" class="swal2-input" placeholder="ตำแหน่งงาน" value="${u.job_position || ''}" style="width: 80%;">
-            <input id="swal-edit-phone" class="swal2-input" placeholder="เบอร์โทรศัพท์" value="${u.phone_number || ''}" style="width: 80%;">
-            <div style="text-align: left; font-size: 14px; margin-top: 15px; margin-bottom: 5px; padding-left: 10%;">อัปโหลดรูปโปรไฟล์ใหม่</div>
-            <input id="swal-edit-avatar" class="form-control" type="file" accept="image/*" style="width: 80%; margin: 0 auto;">
-            <div style="text-align: left; font-size: 14px; margin-top: 15px; margin-bottom: 5px; padding-left: 10%;">สิทธิ์การใช้งาน</div>
-            <select id="swal-edit-role" class="swal2-input" style="width: 80%;">
-                <option value="user" ${u.role === 'user' ? 'selected' : ''}>พนักงานทั่วไป (User)</option>
-                <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>ผู้ดูแลระบบ (Admin)</option>
-            </select>
-        `,
-        confirmButtonText: 'บันทึกการแก้ไข', showCancelButton: true, cancelButtonText: 'ยกเลิก', confirmButtonColor: '#f59e0b',
-        preConfirm: () => {
-            const fname = document.getElementById('swal-edit-fname').value.trim();
-            if(!fname) { Swal.showValidationMessage('ชื่อจริงไม่สามารถเว้นว่างได้'); }
-            return {
-                password: document.getElementById('swal-edit-pass').value.trim(), firstname: fname, lastname: document.getElementById('swal-edit-lname').value.trim(),
-                job_position: document.getElementById('swal-edit-position').value.trim(), phone_number: document.getElementById('swal-edit-phone').value.trim(),
-                avatarFile: document.getElementById('swal-edit-avatar').files[0], role: document.getElementById('swal-edit-role').value
-            }
-        }
-    }).then((result) => {
+        html: `<input id="swal-edit-fname" class="swal2-input" value="${u.firstname}" placeholder="ชื่อจริง">
+               <input id="swal-edit-lname" class="swal2-input" value="${u.lastname}" placeholder="นามสกุล">
+               <input id="swal-edit-position" class="swal2-input" value="${u.job_position || ''}" placeholder="ตำแหน่ง">
+               <select id="swal-edit-role" class="swal2-input" style="width: 80%;"><option value="user" ${u.role==='user'?'selected':''}>User</option><option value="admin" ${u.role==='admin'?'selected':''}>Admin</option></select>`,
+        showCancelButton: true, confirmButtonText: 'บันทึก'
+    }).then(async (result) => {
         if (result.isConfirmed) {
-            let data = result.value;
-            
-            const finishSave = (base64) => {
-                if (data.password !== '') { u.password = data.password; }
-                u.firstname = data.firstname; u.lastname = data.lastname; u.job_position = data.job_position || 'พนักงานทั่วไป'; u.phone_number = data.phone_number || '-'; u.role = data.role;
-                if(base64) { u.avatar = base64; } 
-
-                localStorage.setItem('users', JSON.stringify(users));
-                renderEmployeeList();
-                Swal.fire({icon: 'success', title: 'บันทึกสำเร็จ', showConfirmButton: false, timer: 1500});
-            };
-
-            if(data.avatarFile) {
-                const reader = new FileReader();
-                reader.onload = e => finishSave(e.target.result);
-                reader.readAsDataURL(data.avatarFile);
-            } else { finishSave(null); }
+            await updateDoc(doc(db, "users", uid), {
+                firstname: document.getElementById('swal-edit-fname').value, 
+                lastname: document.getElementById('swal-edit-lname').value, 
+                job_position: document.getElementById('swal-edit-position').value,
+                role: document.getElementById('swal-edit-role').value
+            });
+            renderEmployeeList(); Swal.fire('บันทึกสำเร็จ', '', 'success');
         }
     });
 }
 
-function deleteUser(uid) {
-    Swal.fire({ title: 'ยืนยันการลบพนักงาน?', text: `คุณกำลังจะลบรหัส ${uid} ออกจากระบบ`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ใช่, ลบทิ้งเลย', cancelButtonText: 'ยกเลิก' }).then((result) => {
-        if (result.isConfirmed) { let users = JSON.parse(localStorage.getItem('users')); users = users.filter(u => u.user_id !== uid); localStorage.setItem('users', JSON.stringify(users)); renderEmployeeList(); Swal.fire({icon: 'success', title: 'ลบสำเร็จ', showConfirmButton: false, timer: 1500}); }
-    });
-}
-
-// โหลดรายชื่อพนักงานเข้าสู่ช่อง Select ตัวกรองรายงาน
-function populateReportUserDropdown() {
-    const users = JSON.parse(localStorage.getItem('users')) || [];
+async function populateReportUserDropdown() {
     const select = document.getElementById('report-filter-user');
-    const currentValue = select.value; // จำค่าที่เคยเลือกไว้ไม่ให้หลุดตอนกดสลับแท็บ
-    
+    const currentValue = select.value;
     select.innerHTML = '<option value="">-- แสดงพนักงานทุกคน --</option>';
-    users.forEach(u => {
-        if (u.role !== 'admin') {
-            select.innerHTML += `<option value="${u.user_id}">${u.prefix || ''}${u.firstname} ${u.lastname} (${u.user_id})</option>`;
-        }
+    
+    const querySnapshot = await getDocs(collection(db, "users"));
+    querySnapshot.forEach(docSnap => {
+        const u = docSnap.data();
+        if (u.role !== 'admin') select.innerHTML += `<option value="${u.user_id}">${u.firstname} ${u.lastname} (${u.user_id})</option>`;
     });
     select.value = currentValue;
 }
 
-// ---------------------------------------------------------
-// ฟังก์ชันออกรายงาน (ปรับปรุงระบบคัดกรองและสลีปบิลสรุป)
-// ---------------------------------------------------------
-function renderAllReports() {
-    const reports = JSON.parse(localStorage.getItem('reports')) || []; 
-    const tbody = document.getElementById('admin-reports-tbody'); 
-    tbody.innerHTML = '';
-    
-    // ดึงค่าการคัดกรองจากหน้าจอ
+window.renderAllReports = async function() {
+    const tbody = document.getElementById('admin-reports-tbody');
     const filterUser = document.getElementById('report-filter-user').value;
-    const filterMonth = document.getElementById('report-filter-month').value; // ค่าจะเป็น YYYY-MM
+    const filterMonth = document.getElementById('report-filter-month').value;
     
-    let filtered = reports.slice().reverse();
+    const querySnapshot = await getDocs(collection(db, "fuel"));
+    let reports = [];
+    querySnapshot.forEach(docSnap => reports.push({ id: docSnap.id, ...docSnap.data() }));
     
-    // คัดกรองตามพนักงาน
-    if (filterUser) {
-        filtered = filtered.filter(r => r.user_id === filterUser);
-    }
-    // คัดกรองตามเดือน
-    if (filterMonth) {
-        filtered = filtered.filter(r => r.work_date.startsWith(filterMonth));
-    }
-
-    if (filtered.length === 0) { 
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">📥 ไม่พบข้อมูลรายงานตามเงื่อนไขที่คัดกรอง</td></tr>'; 
-        document.getElementById('rep-sum-count').innerText = '0 รายการ';
-        document.getElementById('rep-sum-km').innerText = '0 กม.';
-        document.getElementById('rep-sum-total').innerText = '฿0.00';
-        return; 
-    }
-
-    let totalCount = 0;
-    let totalKm = 0;
-    let totalBaht = 0;
-
-    filtered.forEach(r => {
-        let statusText = r.approve_disbursement === 'P' ? 'รออนุมัติ' : (r.approve_disbursement === 'Y' ? 'อนุมัติจ่ายแล้ว' : 'ไม่อนุมัติ');
-        
-        // คำนวณสะสมค่าลงตัวคัดกรองสรุปบิล
-        totalCount++;
-        totalKm += parseFloat(r.distance_km) || 0;
-        totalBaht += parseFloat(r.reimbursable_expense) || 0;
-
-        tbody.innerHTML += `<tr><td>${r.work_date}</td><td><strong>${r.user_id}</strong></td><td>${r.work_detail}</td><td>${r.fuel_type}</td><td>${r.distance_km}</td><td class="fw-bold text-success">฿${r.reimbursable_expense}</td><td><span class="status-tag status-${r.approve_disbursement}">${statusText}</span></td></tr>`;
+    let filtered = reports.filter(r => {
+        return (!filterUser || r.user_id === filterUser) && (!filterMonth || r.work_date.startsWith(filterMonth));
     });
 
-    // แสดงผลข้อมูลลงกล่องสลีปบิลด้านล่างรายงาน
-    document.getElementById('rep-sum-count').innerText = `${totalCount} รายการ`;
+    tbody.innerHTML = '';
+    if (filtered.length === 0) { 
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center">ไม่พบข้อมูลรายงานในเงื่อนไขนี้</td></tr>'; 
+        document.getElementById('rep-sum-count').innerText = `0 รายการ`;
+        document.getElementById('rep-sum-km').innerText = `0 กม.`;
+        document.getElementById('rep-sum-total').innerText = `฿0.00`;
+        return; 
+    }
+    
+    let totalKm = 0, totalBaht = 0;
+    filtered.forEach(r => {
+        let statusText = r.Approve_disbursement === 'P' ? 'รออนุมัติ' : (r.Approve_disbursement === 'Y' ? 'อนุมัติ' : 'ไม่อนุมัติ');
+        if(r.Approve_disbursement !== 'N') {
+            totalKm += parseFloat(r.distance_km) || 0; 
+            totalBaht += parseFloat(r.Reimbursable_expense) || 0;
+        }
+        tbody.innerHTML += `<tr><td>${r.work_date}</td><td><strong>${r.user_id}</strong></td><td>${r.work_detail}</td><td>${r.fuel_type || 'ทั่วไป'}</td><td>${r.distance_km}</td><td class="text-success">฿${r.Reimbursable_expense}</td><td><span class="status-tag status-${r.Approve_disbursement}">${statusText}</span></td></tr>`;
+    });
+    document.getElementById('rep-sum-count').innerText = `${filtered.length} รายการ`;
     document.getElementById('rep-sum-km').innerText = `${totalKm.toFixed(2)} กม.`;
     document.getElementById('rep-sum-total').innerText = `฿${totalBaht.toFixed(2)}`;
 }
 
-function loadFuelSettings() {
-    const fuels = JSON.parse(localStorage.getItem('fuels')) || []; const tbody = document.getElementById('fuel-price-tbody'); tbody.innerHTML = '';
-    if (fuels.length === 0) { tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">📥 ยังไม่มีข้อมูลเกณฑ์ราคาเชื้อเพลิงในระบบ</td></tr>'; return; }
-    fuels.forEach(f => { tbody.innerHTML += `<tr><td><span class="status-tag" style="background:#64748b; color:white; border:none; min-width:80px;">${f.type}</span></td><td class="text-start ps-4"><strong>${f.name}</strong></td><td><input type="number" step="0.01" class="form-control fuel-rate-input text-center mx-auto" data-id="${f.id}" value="${f.rate}" style="max-width:150px;"></td><td><button class="btn-pill btn-red py-1 px-2" style="font-size:12px;" onclick="deleteFuel(${f.id})">🗑️ ลบ</button></td></tr>`; });
-}
+async function renderApprovalQueue() {
+    const container = document.getElementById('admin-verification-queue'); 
+    container.innerHTML = '<div class="text-center p-3">กำลังโหลดรายการขออนุมัติ...</div>';
+    
+    const reportsSnap = await getDocs(collection(db, "fuel"));
+    const usersSnap = await getDocs(collection(db, "users"));
+    
+    let usersMap = {};
+    usersSnap.forEach(u => usersMap[u.data().user_id] = u.data());
+    
+    let reports = [];
+    reportsSnap.forEach(r => reports.push({ id: r.id, ...r.data() }));
+    let pendingReports = reports.filter(r => r.Approve_disbursement === 'P');
 
-function updateFuelPrices() {
-    let fuels = JSON.parse(localStorage.getItem('fuels')); document.querySelectorAll('.fuel-rate-input').forEach(input => { let id = parseInt(input.getAttribute('data-id')); let match = fuels.find(f => f.id === id); if(match) match.rate = parseFloat(input.value) || 0; });
-    localStorage.setItem('fuels', JSON.stringify(fuels)); Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', text: 'อัปเดตเรทราคาสำเร็จ', confirmButtonColor: '#2563eb' });
-}
-
-function addNewFuel() {
-    Swal.fire({
-        title: 'เพิ่มประเภทเชื้อเพลิงใหม่',
-        html: `<div style="text-align: left; font-size: 14px; margin-bottom: 5px; padding-left: 10%;">หมวดหมู่พลังงาน</div><select id="swal-ftype" class="swal2-input" style="width: 80%;"><option value="น้ำมัน">น้ำมัน (เช่น แก๊สโซฮอล์, ดีเซล)</option><option value="ไฟฟ้า">ไฟฟ้า (EV Charge)</option><option value="แก๊ส">แก๊ส (LPG / NGV)</option></select><div style="text-align: left; font-size: 14px; margin-top: 15px; margin-bottom: 5px; padding-left: 10%;">ชื่อเรียกเชื้อเพลิง</div><input id="swal-fname" class="swal2-input" placeholder="เช่น แก๊สโซฮอล์ 91" style="width: 80%;"><div style="text-align: left; font-size: 14px; margin-top: 15px; margin-bottom: 5px; padding-left: 10%;">อัตราจ่าย (บาท ต่อ กิโลเมตร)</div><input id="swal-frate" class="swal2-input" placeholder="เช่น 3.50" type="number" step="0.01" style="width: 80%;">`,
-        confirmButtonText: 'บันทึกข้อมูล', showCancelButton: true, cancelButtonText: 'ยกเลิก', confirmButtonColor: '#2563eb',
-        preConfirm: () => {
-            const type = document.getElementById('swal-ftype').value, name = document.getElementById('swal-fname').value.trim(), rate = parseFloat(document.getElementById('swal-frate').value);
-            if(!name || isNaN(rate)) { Swal.showValidationMessage('กรุณากรอกชื่อเชื้อเพลิงและเรทราคาให้ถูกต้องครบถ้วน'); }
-            return { id: Date.now(), type: type, name: name, rate: rate }
-        }
-    }).then((result) => { if (result.isConfirmed) { let fuels = JSON.parse(localStorage.getItem('fuels')) || []; fuels.push(result.value); localStorage.setItem('fuels', JSON.stringify(fuels)); loadFuelSettings(); Swal.fire('สำเร็จ', 'เพิ่มเกณฑ์ราคาเชื้อเพลิงใหม่เรียบร้อย', 'success'); } });
-}
-
-function deleteFuel(id) {
-    Swal.fire({ title: 'ยืนยันการลบ?', text: "คุณต้องการลบเกณฑ์ราคาเชื้อเพลิงนี้ใช่หรือไม่?", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ใช่, ลบทิ้งเลย', cancelButtonText: 'ยกเลิก' }).then((result) => { if (result.isConfirmed) { let fuels = JSON.parse(localStorage.getItem('fuels')) || []; fuels = fuels.filter(f => f.id !== id); localStorage.setItem('fuels', JSON.stringify(fuels)); loadFuelSettings(); Swal.fire({ icon: 'success', title: 'ลบสำเร็จ', showConfirmButton: false, timer: 1500 }); } });
-}
-
-function renderApprovalQueue() {
-    const reports = JSON.parse(localStorage.getItem('reports')) || []; const users = JSON.parse(localStorage.getItem('users')) || []; const container = document.getElementById('admin-verification-queue'); container.innerHTML = '';
-    const sortedReports = reports.slice().reverse().sort((a,b) => (a.approve_disbursement === 'P' ? -1 : 1)); if (sortedReports.length === 0) { return; }
-    sortedReports.forEach(r => {
-        let u = users.find(x => x.user_id === r.user_id) || {}; let fullName = `${u.prefix||''}${u.firstname||''} ${u.lastname||''}`; let actionButtons = '';
-        if(r.approve_disbursement === 'P') { actionButtons = `<div class="mt-3"><button class="btn-pill btn-green me-2" onclick="processApproval('${r.report_id}', 'Y')">✔️ อนุมัติ</button><button class="btn-pill btn-red" onclick="processApproval('${r.report_id}', 'N')">❌ ไม่อนุมัติ</button></div>`; } 
-        else { let statusLabel = r.approve_disbursement === 'Y' ? 'อนุมัติแล้ว' : 'ปฏิเสธคำขอ'; let reasonText = r.reason ? `<div class="text-danger mt-2" style="font-size:13px;">เหตุผล: ${r.reason}</div>` : ''; actionButtons = `<div class="mt-3 fw-bold">สถานะ: <span class="status-tag status-${r.approve_disbursement}">${statusLabel}</span> ${reasonText}</div>`; }
-        let proofImg = r.image_file ? `<img src="${r.image_file}" class="receipt-img">` : '';
-        container.innerHTML += `<div class="white-card d-flex flex-column flex-md-row justify-content-between align-items-start gap-4"><div class="flex-grow-1" style="width: 100%;"><div class="fw-bold fs-6 mb-2" style="color:#112246;">ผู้เบิก: ${fullName} (รหัส: ${r.user_id})</div><div><strong>วันที่:</strong> ${r.work_date} | <strong>งาน:</strong> ${r.work_detail}</div><div><strong>ประเภท:</strong> ${r.fuel_type} | <strong>ระยะทาง:</strong> ${r.distance_km} กม.</div><div class="fw-bold mt-2 text-success" style="font-size: 18px;">ยอดเงินเบิก: ฿${r.reimbursable_expense}</div>${actionButtons}</div><div style="width: 100%; max-width: 250px;">${proofImg}</div></div>`;
+    container.innerHTML = '';
+    if (pendingReports.length === 0) { container.innerHTML = '<div class="text-center p-4 text-muted">🎉 ยอดเยี่ยม! ไม่มีรายการตกค้างรออนุมัติ</div>'; return; }
+    
+    pendingReports.forEach(r => {
+        let u = usersMap[r.user_id] || {};
+        let actionButtons = `<div class="mt-3"><button class="btn-pill btn-green me-2 py-1 px-3" onclick="window.processApproval('${r.id}', 'Y')">✔️ อนุมัติ</button><button class="btn-pill btn-red py-1 px-3" onclick="window.processApproval('${r.id}', 'N')">❌ ไม่อนุมัติ</button></div>`;
+        let proofImg = r.Image_file ? `<img src="${r.Image_file}" class="receipt-img" style="max-width:200px; max-height:150px; cursor:pointer;" onclick="window.open('${r.Image_file}')">` : '<span class="text-muted">ไม่มีรูปแนบ</span>';
+        
+        container.innerHTML += `<div class="white-card d-flex justify-content-between align-items-center mb-3 p-3 border rounded shadow-sm">
+            <div>
+                <div class="fw-bold fs-5 text-dark">ผู้ขอเบิก: ${u.firstname || 'ไม่ทราบชื่อ'} (${r.user_id})</div>
+                <div class="text-secondary mt-1">วันที่ทำงาน: <strong>${r.work_date}</strong></div>
+                <div class="text-secondary">รายละเอียด: ${r.work_detail}</div>
+                <div class="mt-2 text-primary fw-bold">ระยะทาง: ${r.distance_km} กม. | ยอดเงินเบิก: ฿${r.Reimbursable_expense}</div>
+                ${actionButtons}
+            </div>
+            <div class="text-center">${proofImg}</div>
+        </div>`;
     });
 }
 
-function processApproval(reportId, newStatus) {
-    let reports = JSON.parse(localStorage.getItem('reports')); const idx = reports.findIndex(r => r.report_id === reportId);
-    if(idx !== -1) {
-        if(newStatus === 'N') {
-            Swal.fire({ title: 'ปฏิเสธการเบิกจ่าย', text: 'เหตุผลที่ไม่อนุมัติ:', input: 'text', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ยืนยัน', cancelButtonText: 'ยกเลิก' }).then((result) => {
-                if (result.isConfirmed) { reports[idx].reason = result.value || 'ไม่ได้ระบุเหตุผล'; reports[idx].approve_disbursement = newStatus; localStorage.setItem('reports', JSON.stringify(reports)); renderApprovalQueue(); Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', showConfirmButton: false, timer: 1500 }); }
-            });
-        } else {
-            Swal.fire({ title: 'ยืนยันการอนุมัติ?', icon: 'question', showCancelButton: true, confirmButtonColor: '#10b981', confirmButtonText: 'อนุมัติ', cancelButtonText: 'ยกเลิก' }).then((result) => {
-                if(result.isConfirmed) { reports[idx].approve_disbursement = newStatus; localStorage.setItem('reports', JSON.stringify(reports)); renderApprovalQueue(); Swal.fire({ icon: 'success', title: 'อนุมัติเรียบร้อย', showConfirmButton: false, timer: 1500 }); }
-            });
-        }
+window.processApproval = function(reportId, newStatus) {
+    if(newStatus === 'N') {
+        Swal.fire({ title: 'ปฏิเสธการเบิกจ่าย', text: 'ระบุเหตุผลที่ไม่อนุมัติ:', input: 'text', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ยืนยันปฏิเสธ' }).then(async (result) => {
+            if (result.isConfirmed) { 
+                await updateDoc(doc(db, "fuel", reportId), { Approve_disbursement: 'N', reason: result.value || 'ไม่ได้ระบุเหตุผล' });
+                renderApprovalQueue(); Swal.fire('บันทึกสำเร็จ', 'ปฏิเสธคำขอแล้ว', 'success'); 
+            }
+        });
+    } else {
+        Swal.fire({ title: 'ยืนยันการอนุมัติยอดเงินนี้?', icon: 'question', showCancelButton: true, confirmButtonColor: '#10b981', confirmButtonText: 'อนุมัติจ่ายเงิน' }).then(async (result) => {
+            if(result.isConfirmed) { 
+                await updateDoc(doc(db, "fuel", reportId), { Approve_disbursement: 'Y' });
+                renderApprovalQueue(); Swal.fire('อนุมัติเรียบร้อย', '', 'success'); 
+            }
+        });
     }
 }
 
-function exitSystem() { Swal.fire({ title: 'ออกจากระบบ', icon: 'question', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ใช่, ออกจากระบบ' }).then((result) => { if(result.isConfirmed) { localStorage.removeItem('session_user_id'); window.location.href = 'login.html'; } }); }
+async function loadFuelSettings() {
+    const tbody = document.getElementById('admin-fuel-tbody'); tbody.innerHTML = '<tr><td colspan="5">กำลังโหลดข้อมูลราคาน้ำมัน...</td></tr>';
+    const q = await getDocs(collection(db, "fuels"));
+    tbody.innerHTML = '';
+    q.forEach(docSnap => {
+        const f = docSnap.data();
+        tbody.innerHTML += `<tr><td>${f.id}</td><td>${f.type}</td><td><strong>${f.name}</strong></td><td>${f.rate} บาท/กม.</td><td><button class="btn-pill btn-red py-1 px-2" style="font-size:12px;" onclick="window.deleteFuel('${f.id}')">🗑️ ลบ</button></td></tr>`;
+    });
+}
+
+window.addNewFuel = function() {
+    Swal.fire({
+        title: 'เพิ่มประเภทเชื้อเพลิง/ราคากลาง',
+        html: `<input id="swal-f-name" class="swal2-input" placeholder="เช่น ดีเซล B7, EV Charge">
+               <input id="swal-f-rate" class="swal2-input" type="number" step="0.01" placeholder="บาท ต่อ กิโลเมตร">
+               <select id="swal-f-type" class="swal2-input"><option value="น้ำมัน">น้ำมัน</option><option value="ไฟฟ้า">ไฟฟ้า</option><option value="แก๊ส">แก๊ส</option></select>`,
+        showCancelButton: true, confirmButtonText: 'บันทึก',
+        preConfirm: () => { return { name: document.getElementById('swal-f-name').value, rate: parseFloat(document.getElementById('swal-f-rate').value), type: document.getElementById('swal-f-type').value } }
+    }).then(async (result) => {
+        if(result.isConfirmed && result.value.name && !isNaN(result.value.rate)) {
+            let id = "FUEL" + Date.now();
+            await setDoc(doc(db, "fuels", id), { id: id, ...result.value });
+            loadFuelSettings(); Swal.fire('สำเร็จ', 'บันทึกราคากลางแล้ว', 'success');
+        }
+    });
+}
+
+window.deleteFuel = function(id) {
+    Swal.fire({ title: 'ลบประเภทเชื้อเพลิงนี้?', icon: 'warning', showCancelButton: true }).then(async (result) => {
+        if (result.isConfirmed) { await deleteDoc(doc(db, "fuels", id)); loadFuelSettings(); Swal.fire('ลบสำเร็จ', '', 'success'); }
+    });
+}
+
+window.printReport = function() { window.print(); }
+window.exitSystem = function() { localStorage.removeItem('session_user_id'); window.location.href = 'login.html'; }

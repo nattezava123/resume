@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Chanchai OFFICE - เข้าสู่ระบบ</title>
-    <!-- นำเข้า Bootstrap 5 และ SweetAlert2 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="style.css">
@@ -26,59 +25,64 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        window.addEventListener('DOMContentLoaded', () => {
-            let existingUsers = JSON.parse(localStorage.getItem('users'));
-            if (existingUsers && existingUsers.length > 0 && !existingUsers[0].password) {
-                localStorage.removeItem('users');
-            }
-            if (!localStorage.getItem('users')) {
-                const defaultUsers = [
-                    { user_id: "CHA2546", prefix: "นาย", firstname: "วิจิตรกมล", lastname: "สารการ", password: "1234", job_position: "เจ้าหน้าที่สรรหา", work_location: "สำนักงานใหญ่", department: "CHA-ENC", start_date: "2022-05-01", phone_number: "0885558866", role: "user", avatar: "" },
-                    { user_id: "ADMIN99", prefix: "นาย", firstname: "สมชาย", lastname: "ใจดี", password: "1234", job_position: "ผู้ดูแลระบบ", work_location: "สำนักงานใหญ่", department: "IT-ADMIN", start_date: "2020-01-15", phone_number: "0812345678", role: "admin", avatar: "" }
-                ];
-                localStorage.setItem('users', JSON.stringify(defaultUsers));
-            }
-            if (!localStorage.getItem('fuels')) {
-                const defaultFuels = [
-                    { id: 1, type: "น้ำมัน", name: "แก๊สโซฮอล์ 95", rate: 3.85 },
-                    { id: 2, type: "น้ำมัน", name: "ดีเซล B7", rate: 3.29 },
-                    { id: 3, type: "ไฟฟ้า", name: "EV Normal Charge", rate: 1.50 },
-                    { id: 4, type: "แก๊ส", name: "NGV", rate: 1.20 }
-                ];
-                localStorage.setItem('fuels', JSON.stringify(defaultFuels));
-            }
-            if (!localStorage.getItem('reports')) {
-                localStorage.setItem('reports', JSON.stringify([]));
-            }
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, getDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAADUqPrDtltsOiTXJ5AcQ07tkWAJdBa54",
+            authDomain: "chanchai-office.firebaseapp.com",
+            projectId: "chanchai-office",
+            storageBucket: "chanchai-office.firebasestorage.app",
+            messagingSenderId: "933936461367",
+            appId: "1:933936461367:web:4500e6c940133dc5b2b1b2",
+            measurementId: "G-9M8LCDB6KV"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const usersSnapshot = await getDocs(collection(db, "users"));
+                if (usersSnapshot.empty) {
+                    await setDoc(doc(db, "users", "ADMIN99"), { user_id: "ADMIN99", prefix: "นาย", firstname: "สมชาย", lastname: "ใจดี", password: "1234", job_position: "ผู้ดูแลระบบ", work_location: "สำนักงานใหญ่", Department: "IT-ADMIN", start_date: "2020-01-15", Phone_number: "0812345678", role: "admin", avatar: "" });
+                    await setDoc(doc(db, "users", "CHA2546"), { user_id: "CHA2546", prefix: "นาย", firstname: "วิจิตรกมล", lastname: "สารการ", password: "1234", job_position: "เจ้าหน้าที่สรรหา", work_location: "สำนักงานใหญ่", Department: "CHA-ENC", start_date: "2022-05-01", Phone_number: "0885558866", role: "user", avatar: "" });
+                    
+                    const defaultFuels = [
+                        { id: "1", type: "น้ำมัน", name: "แก๊สโซฮอล์ 95", rate: 3.85 },
+                        { id: "2", type: "น้ำมัน", name: "ดีเซล B7", rate: 3.29 },
+                        { id: "3", type: "ไฟฟ้า", name: "EV Normal Charge", rate: 1.50 }
+                    ];
+                    for (const fuel of defaultFuels) { await setDoc(doc(db, "fuels", fuel.id), fuel); }
+                    console.log("Setup initial data complete.");
+                }
+            } catch(e) { console.error(e); }
         });
 
-        function executeLogin() {
+        window.executeLogin = async function() {
             const u = document.getElementById('username').value.trim();
             const p = document.getElementById('password').value;
-            const users = JSON.parse(localStorage.getItem('users'));
             
-            const matchedUser = users.find(user => user.user_id === u && user.password === p);
+            if(!u || !p) return Swal.fire('แจ้งเตือน', 'กรุณากรอกข้อมูลให้ครบ', 'warning');
 
-            if (matchedUser) {
-                localStorage.setItem('session_user_id', matchedUser.user_id);
-                Swal.fire({
-                    icon: 'success',
-                    title: 'เข้าสู่ระบบสำเร็จ',
-                    text: `ยินดีต้อนรับคุณ ${matchedUser.firstname}`,
-                    showConfirmButton: false,
-                    timer: 1500
-                }).then(() => {
-                    window.location.href = matchedUser.role === 'admin' ? 'admin.html' : 'user.html';
-                });
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'เข้าสู่ระบบล้มเหลว',
-                    text: 'รหัสพนักงานหรือรหัสผ่านไม่ถูกต้อง',
-                    confirmButtonText: 'ตกลง',
-                    confirmButtonColor: '#2563eb'
-                });
+            try {
+                const userDoc = await getDoc(doc(db, "users", u));
+                if (userDoc.exists() && userDoc.data().password === p) {
+                    const matchedUser = userDoc.data();
+                    localStorage.setItem('session_user_id', matchedUser.user_id);
+                    
+                    Swal.fire({
+                        icon: 'success', title: 'เข้าสู่ระบบสำเร็จ', text: `ยินดีต้อนรับคุณ ${matchedUser.firstname}`, showConfirmButton: false, timer: 1500
+                    }).then(() => {
+                        window.location.href = matchedUser.role === 'admin' ? 'admin.html' : 'user.html';
+                    });
+                } else {
+                    Swal.fire({ icon: 'error', title: 'ล้มเหลว', text: 'รหัสพนักงานหรือรหัสผ่านไม่ถูกต้อง' });
+                }
+            } catch (error) {
+                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อ Firebase ได้ ตรวจสอบการตั้งค่าเปิดฐานข้อมูลหรือยัง?', 'error');
             }
         }
     </script>
