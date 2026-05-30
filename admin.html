@@ -56,10 +56,80 @@
                     </div>
                 </div>
 
-                <div id="adm-approves-view" class="adm-tab-view" style="display: none;"><div class="blue-panel"><div class="panel-title">รายการรออนุมัติค่าน้ำมันเชื้อเพลิง</div><div id="admin-verification-queue" class="d-flex flex-column gap-3"></div></div></div>
-                <div id="adm-prices-view" class="adm-tab-view" style="display: none;"><div class="blue-panel"><div class="panel-title">เกณฑ์ราคาน้ำมันเชื้อเพลิง / ไฟฟ้า / แก๊ส</div><div class="table-responsive"><table class="data-table table align-middle"><thead><tr><th>ประเภทรถ</th><th>ชื่อเชื้อเพลิง</th><th>เรทราคา (บาท / กิโลเมตร)</th></tr></thead><tbody id="fuel-price-tbody"></tbody></table></div><div class="text-center mt-4"><button class="btn-pill btn-white" onclick="updateFuelPrices()">บันทึกอัตราอัปเดต</button></div></div></div>
-                <div id="adm-users-view" class="adm-tab-view" style="display: none;"><div class="blue-panel"><div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3"><div class="panel-title mb-0 border-0">ข้อมูลพนักงานในระบบ</div><button class="btn-pill btn-blue" onclick="addNewUser()">+ เพิ่มพนักงานใหม่</button></div><div class="table-responsive"><table class="data-table table align-middle"><thead><tr><th>ลำดับ</th><th>รูป</th><th>รหัสพนักงาน</th><th>ชื่อ-นามสกุล</th><th>ตำแหน่ง</th><th>เบอร์โทรศัพท์</th><th>จัดการ</th></tr></thead><tbody id="admin-user-tbody"></tbody></table></div></div></div>
-                <div id="adm-reports-view" class="adm-tab-view" style="display: none;"><div class="blue-panel"><div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3"><div class="panel-title mb-0 border-0">ออกรายงานการเบิกจ่ายประจำวัน/เดือน/ปี</div><button class="btn-pill btn-white" onclick="window.print()">🖨️ พิมพ์รายงาน</button></div><div class="table-responsive"><table class="data-table table align-middle"><thead><tr><th>วันที่</th><th>รหัสพนักงาน</th><th>ชื่องาน</th><th>ประเภท</th><th>ระยะทาง (กม.)</th><th>ยอดเงิน (บาท)</th><th>สถานะ</th></tr></thead><tbody id="admin-reports-tbody"></tbody></table></div></div></div>
+                <div id="adm-approves-view" class="adm-tab-view" style="display: none;">
+                    <div class="blue-panel">
+                        <div class="panel-title">รายการรออนุมัติค่าน้ำมันเชื้อเพลิง</div>
+                        <div id="admin-verification-queue" class="d-flex flex-column gap-3"></div>
+                    </div>
+                </div>
+
+                <div id="adm-prices-view" class="adm-tab-view" style="display: none;">
+                    <div class="blue-panel">
+                        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+                            <div class="panel-title mb-0 border-0">เกณฑ์ราคาน้ำมันเชื้อเพลิง / ไฟฟ้า / แก๊ส</div>
+                            <button class="btn-pill btn-blue" onclick="addNewFuel()">+ เพิ่มเชื้อเพลิงใหม่</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table table align-middle text-center">
+                                <thead><tr><th>ประเภทรถ</th><th>ชื่อเชื้อเพลิง</th><th>เรทราคา (บาท / กิโลเมตร)</th><th>จัดการ</th></tr></thead>
+                                <tbody id="fuel-price-tbody"></tbody>
+                            </table>
+                        </div>
+                        <div class="text-center mt-4"><button class="btn-pill btn-white" onclick="updateFuelPrices()">บันทึกอัตราอัปเดต</button></div>
+                    </div>
+                </div>
+
+                <div id="adm-users-view" class="adm-tab-view" style="display: none;">
+                    <div class="blue-panel">
+                        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+                            <div class="panel-title mb-0 border-0">ข้อมูลพนักงานในระบบ</div>
+                            <button class="btn-pill btn-blue" onclick="addNewUser()">+ เพิ่มพนักงานใหม่</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table table align-middle">
+                                <thead><tr><th>ลำดับ</th><th>รูป</th><th>รหัสพนักงาน</th><th>ชื่อ-นามสกุล</th><th>ตำแหน่ง</th><th>เบอร์โทรศัพท์</th><th>จัดการ</th></tr></thead>
+                                <tbody id="admin-user-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="adm-reports-view" class="adm-tab-view" style="display: none;">
+                    <div class="blue-panel">
+                        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+                            <div class="panel-title mb-0 border-0">ออกรายงานการเบิกจ่ายประจำวัน/เดือน/ปี</div>
+                            <button class="btn-pill btn-white" onclick="window.print()">🖨️ พิมพ์รายงาน</button>
+                        </div>
+                        
+                        <div class="row g-3 mb-4 p-3 rounded bg-light border no-print">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-dark">คัดกรองรายบุคคล (รายชื่อพนักงาน)</label>
+                                <select id="report-filter-user" class="form-select form-control" onchange="renderAllReports()">
+                                    <option value="">-- แสดงพนักงานทุกคน --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-dark">คัดกรองประจำเดือน</label>
+                                <input type="month" id="report-filter-month" class="form-control" onchange="renderAllReports()">
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="data-table table align-middle">
+                                <thead><tr><th>วันที่</th><th>รหัสพนักงาน</th><th>ชื่องาน</th><th>ประเภทรถ/เชื้อเพลิง</th><th>ระยะทาง (กม.)</th><th>ยอดเงินเบิก (บาท)</th><th>สถานะ</th></tr></thead>
+                                <tbody id="admin-reports-tbody"></tbody>
+                            </table>
+                        </div>
+
+                        <div class="mt-4 p-4 border rounded bg-light ms-auto" id="report-summary-box" style="max-width: 450px; border-top: 4px solid #2563eb !important; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+                            <h5 class="fw-bold mb-3 pb-2 text-primary border-bottom">🧾 สรุปยอดรายละเอียดค่าใช้จ่าย (บิล)</h5>
+                            <div class="d-flex justify-content-between mb-2"><span>จำนวนรายการเบิกในระบบ:</span><span class="fw-bold text-dark" id="rep-sum-count">0 รายการ</span></div>
+                            <div class="d-flex justify-content-between mb-2"><span>ระยะทางรวมสุทธิ:</span><span class="fw-bold text-dark" id="rep-sum-km">0 กม.</span></div>
+                            <div class="d-flex justify-content-between pt-2 border-top fs-5 fw-bold text-dark"><span>ยอดเงินรวมทั้งสิ้น:</span><span class="text-success" id="rep-sum-total">฿0.00</span></div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>

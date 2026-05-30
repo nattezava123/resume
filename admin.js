@@ -25,7 +25,10 @@ function switchAdminTab(tabName) {
     if(tabName === 'users') renderEmployeeList();
     if(tabName === 'prices') loadFuelSettings();
     if(tabName === 'approves') renderApprovalQueue();
-    if(tabName === 'reports') renderAllReports();
+    if(tabName === 'reports') {
+        populateReportUserDropdown(); // โหลดรายชื่อตัวคัดกรองก่อนแสดงผล
+        renderAllReports();
+    }
 }
 
 function loadAdminProfile() {
@@ -52,11 +55,11 @@ function updateAdminProfile() {
             users[idx].lastname = document.getElementById('adm-lastname').value.trim();
             users[idx].password = document.getElementById('adm-password').value;
             users[idx].phone_number = document.getElementById('adm-phone').value.trim();
-            if(base64Img) users[idx].avatar = base64Img; // อัปเดตเฉพาะเมื่อมีการอัปโหลดรูปใหม่
+            if(base64Img) users[idx].avatar = base64Img; 
             
             localStorage.setItem('users', JSON.stringify(users));
             document.getElementById('adm-avatar-display').src = users[idx].avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150";
-            document.getElementById('adm-avatar').value = ''; // เคลียร์ช่องไฟล์
+            document.getElementById('adm-avatar').value = ''; 
             updateHeaderDisplay();
             Swal.fire({ icon: 'success', title: 'อัปเดตสำเร็จ', text: 'บันทึกข้อมูลเรียบร้อย', confirmButtonColor: '#2563eb' });
         };
@@ -82,10 +85,10 @@ function renderEmployeeList() {
         let roleBadge = u.role === 'admin' ? '<span class="badge bg-primary">Admin</span>' : '<span class="badge bg-secondary">User</span>';
         let avatarImg = u.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150";
         
-        // แก้ไขให้ใช้คลาส avatar-sm
         tbody.innerHTML += `<tr><td>${idx + 1}</td><td><img src="${avatarImg}" class="avatar-sm"></td><td><strong>${u.user_id}</strong> <br>${roleBadge}</td><td>${u.prefix || ''}${u.firstname} ${u.lastname}</td><td>${u.job_position || 'พนักงาน'}</td><td>${u.phone_number || '-'}</td><td>${actionBtns}</td></tr>`;
     });
 }
+
 function addNewUser() {
     Swal.fire({
         title: 'เพิ่มพนักงานใหม่',
@@ -114,7 +117,7 @@ function addNewUser() {
                 lastname: document.getElementById('swal-lname').value.trim(),
                 job_position: document.getElementById('swal-position').value.trim() || 'พนักงานทั่วไป', 
                 phone_number: document.getElementById('swal-phone').value.trim() || '-',
-                avatarFile: document.getElementById('swal-avatar').files[0], // ดึงออบเจ็กต์ไฟล์มา
+                avatarFile: document.getElementById('swal-avatar').files[0], 
                 role: document.getElementById('swal-role').value,
                 prefix: 'นาย', work_location: 'สำนักงานใหญ่', department: 'ทั่วไป'
             }
@@ -127,7 +130,7 @@ function addNewUser() {
             
             const finishSave = (base64) => {
                 data.avatar = base64 || "";
-                delete data.avatarFile; // ลบ Object ไฟล์ทิ้งก่อนบันทึกลง localStorage
+                delete data.avatarFile; 
                 users.push(data);
                 localStorage.setItem('users', JSON.stringify(users));
                 renderEmployeeList();
@@ -184,7 +187,7 @@ function editUser(uid) {
             const finishSave = (base64) => {
                 if (data.password !== '') { u.password = data.password; }
                 u.firstname = data.firstname; u.lastname = data.lastname; u.job_position = data.job_position || 'พนักงานทั่วไป'; u.phone_number = data.phone_number || '-'; u.role = data.role;
-                if(base64) { u.avatar = base64; } // อัปเดตเฉพาะถ้ามีการเลือกรูปใหม่
+                if(base64) { u.avatar = base64; } 
 
                 localStorage.setItem('users', JSON.stringify(users));
                 renderEmployeeList();
@@ -206,18 +209,77 @@ function deleteUser(uid) {
     });
 }
 
+// โหลดรายชื่อพนักงานเข้าสู่ช่อง Select ตัวกรองรายงาน
+function populateReportUserDropdown() {
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+    const select = document.getElementById('report-filter-user');
+    const currentValue = select.value; // จำค่าที่เคยเลือกไว้ไม่ให้หลุดตอนกดสลับแท็บ
+    
+    select.innerHTML = '<option value="">-- แสดงพนักงานทุกคน --</option>';
+    users.forEach(u => {
+        if (u.role !== 'admin') {
+            select.innerHTML += `<option value="${u.user_id}">${u.prefix || ''}${u.firstname} ${u.lastname} (${u.user_id})</option>`;
+        }
+    });
+    select.value = currentValue;
+}
+
+// ---------------------------------------------------------
+// ฟังก์ชันออกรายงาน (ปรับปรุงระบบคัดกรองและสลีปบิลสรุป)
+// ---------------------------------------------------------
 function renderAllReports() {
-    const reports = JSON.parse(localStorage.getItem('reports')) || []; const tbody = document.getElementById('admin-reports-tbody'); tbody.innerHTML = '';
-    if (reports.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">📥 ยังไม่มีข้อมูลรายงาน</td></tr>'; return; }
-    reports.slice().reverse().forEach(r => {
+    const reports = JSON.parse(localStorage.getItem('reports')) || []; 
+    const tbody = document.getElementById('admin-reports-tbody'); 
+    tbody.innerHTML = '';
+    
+    // ดึงค่าการคัดกรองจากหน้าจอ
+    const filterUser = document.getElementById('report-filter-user').value;
+    const filterMonth = document.getElementById('report-filter-month').value; // ค่าจะเป็น YYYY-MM
+    
+    let filtered = reports.slice().reverse();
+    
+    // คัดกรองตามพนักงาน
+    if (filterUser) {
+        filtered = filtered.filter(r => r.user_id === filterUser);
+    }
+    // คัดกรองตามเดือน
+    if (filterMonth) {
+        filtered = filtered.filter(r => r.work_date.startsWith(filterMonth));
+    }
+
+    if (filtered.length === 0) { 
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">📥 ไม่พบข้อมูลรายงานตามเงื่อนไขที่คัดกรอง</td></tr>'; 
+        document.getElementById('rep-sum-count').innerText = '0 รายการ';
+        document.getElementById('rep-sum-km').innerText = '0 กม.';
+        document.getElementById('rep-sum-total').innerText = '฿0.00';
+        return; 
+    }
+
+    let totalCount = 0;
+    let totalKm = 0;
+    let totalBaht = 0;
+
+    filtered.forEach(r => {
         let statusText = r.approve_disbursement === 'P' ? 'รออนุมัติ' : (r.approve_disbursement === 'Y' ? 'อนุมัติจ่ายแล้ว' : 'ไม่อนุมัติ');
+        
+        // คำนวณสะสมค่าลงตัวคัดกรองสรุปบิล
+        totalCount++;
+        totalKm += parseFloat(r.distance_km) || 0;
+        totalBaht += parseFloat(r.reimbursable_expense) || 0;
+
         tbody.innerHTML += `<tr><td>${r.work_date}</td><td><strong>${r.user_id}</strong></td><td>${r.work_detail}</td><td>${r.fuel_type}</td><td>${r.distance_km}</td><td class="fw-bold text-success">฿${r.reimbursable_expense}</td><td><span class="status-tag status-${r.approve_disbursement}">${statusText}</span></td></tr>`;
     });
+
+    // แสดงผลข้อมูลลงกล่องสลีปบิลด้านล่างรายงาน
+    document.getElementById('rep-sum-count').innerText = `${totalCount} รายการ`;
+    document.getElementById('rep-sum-km').innerText = `${totalKm.toFixed(2)} กม.`;
+    document.getElementById('rep-sum-total').innerText = `฿${totalBaht.toFixed(2)}`;
 }
 
 function loadFuelSettings() {
     const fuels = JSON.parse(localStorage.getItem('fuels')) || []; const tbody = document.getElementById('fuel-price-tbody'); tbody.innerHTML = '';
-    fuels.forEach(f => { tbody.innerHTML += `<tr><td><span class="status-tag" style="background:#64748b; color:white; border:none;">${f.type}</span></td><td>${f.name}</td><td><input type="number" step="0.01" class="form-control fuel-rate-input text-center" data-id="${f.id}" value="${f.rate}" style="max-width:150px;"></td></tr>`; });
+    if (fuels.length === 0) { tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">📥 ยังไม่มีข้อมูลเกณฑ์ราคาเชื้อเพลิงในระบบ</td></tr>'; return; }
+    fuels.forEach(f => { tbody.innerHTML += `<tr><td><span class="status-tag" style="background:#64748b; color:white; border:none; min-width:80px;">${f.type}</span></td><td class="text-start ps-4"><strong>${f.name}</strong></td><td><input type="number" step="0.01" class="form-control fuel-rate-input text-center mx-auto" data-id="${f.id}" value="${f.rate}" style="max-width:150px;"></td><td><button class="btn-pill btn-red py-1 px-2" style="font-size:12px;" onclick="deleteFuel(${f.id})">🗑️ ลบ</button></td></tr>`; });
 }
 
 function updateFuelPrices() {
@@ -225,42 +287,32 @@ function updateFuelPrices() {
     localStorage.setItem('fuels', JSON.stringify(fuels)); Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', text: 'อัปเดตเรทราคาสำเร็จ', confirmButtonColor: '#2563eb' });
 }
 
-function renderApprovalQueue() {
-    const reports = JSON.parse(localStorage.getItem('reports')) || []; 
-    const users = JSON.parse(localStorage.getItem('users')) || []; 
-    const container = document.getElementById('admin-verification-queue'); 
-    container.innerHTML = '';
-    const sortedReports = reports.slice().reverse().sort((a,b) => (a.approve_disbursement === 'P' ? -1 : 1)); 
-    
-    if (sortedReports.length === 0) { return; }
-    
-    sortedReports.forEach(r => {
-        let u = users.find(x => x.user_id === r.user_id) || {}; 
-        let fullName = `${u.prefix||''}${u.firstname||''} ${u.lastname||''}`; 
-        let actionButtons = '';
-        if(r.approve_disbursement === 'P') { 
-            actionButtons = `<div class="mt-3"><button class="btn-pill btn-green me-2" onclick="processApproval('${r.report_id}', 'Y')">✔️ อนุมัติ</button><button class="btn-pill btn-red" onclick="processApproval('${r.report_id}', 'N')">❌ ไม่อนุมัติ</button></div>`; 
-        } else { 
-            let statusLabel = r.approve_disbursement === 'Y' ? 'อนุมัติแล้ว' : 'ปฏิเสธคำขอ'; 
-            let reasonText = r.reason ? `<div class="text-danger mt-2" style="font-size:13px;">เหตุผล: ${r.reason}</div>` : ''; 
-            actionButtons = `<div class="mt-3 fw-bold">สถานะ: <span class="status-tag status-${r.approve_disbursement}">${statusLabel}</span> ${reasonText}</div>`; 
+function addNewFuel() {
+    Swal.fire({
+        title: 'เพิ่มประเภทเชื้อเพลิงใหม่',
+        html: `<div style="text-align: left; font-size: 14px; margin-bottom: 5px; padding-left: 10%;">หมวดหมู่พลังงาน</div><select id="swal-ftype" class="swal2-input" style="width: 80%;"><option value="น้ำมัน">น้ำมัน (เช่น แก๊สโซฮอล์, ดีเซล)</option><option value="ไฟฟ้า">ไฟฟ้า (EV Charge)</option><option value="แก๊ส">แก๊ส (LPG / NGV)</option></select><div style="text-align: left; font-size: 14px; margin-top: 15px; margin-bottom: 5px; padding-left: 10%;">ชื่อเรียกเชื้อเพลิง</div><input id="swal-fname" class="swal2-input" placeholder="เช่น แก๊สโซฮอล์ 91" style="width: 80%;"><div style="text-align: left; font-size: 14px; margin-top: 15px; margin-bottom: 5px; padding-left: 10%;">อัตราจ่าย (บาท ต่อ กิโลเมตร)</div><input id="swal-frate" class="swal2-input" placeholder="เช่น 3.50" type="number" step="0.01" style="width: 80%;">`,
+        confirmButtonText: 'บันทึกข้อมูล', showCancelButton: true, cancelButtonText: 'ยกเลิก', confirmButtonColor: '#2563eb',
+        preConfirm: () => {
+            const type = document.getElementById('swal-ftype').value, name = document.getElementById('swal-fname').value.trim(), rate = parseFloat(document.getElementById('swal-frate').value);
+            if(!name || isNaN(rate)) { Swal.showValidationMessage('กรุณากรอกชื่อเชื้อเพลิงและเรทราคาให้ถูกต้องครบถ้วน'); }
+            return { id: Date.now(), type: type, name: name, rate: rate }
         }
-        
-        // แก้ไขให้รูปหลักฐานใช้คลาส receipt-img
+    }).then((result) => { if (result.isConfirmed) { let fuels = JSON.parse(localStorage.getItem('fuels')) || []; fuels.push(result.value); localStorage.setItem('fuels', JSON.stringify(fuels)); loadFuelSettings(); Swal.fire('สำเร็จ', 'เพิ่มเกณฑ์ราคาเชื้อเพลิงใหม่เรียบร้อย', 'success'); } });
+}
+
+function deleteFuel(id) {
+    Swal.fire({ title: 'ยืนยันการลบ?', text: "คุณต้องการลบเกณฑ์ราคาเชื้อเพลิงนี้ใช่หรือไม่?", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ใช่, ลบทิ้งเลย', cancelButtonText: 'ยกเลิก' }).then((result) => { if (result.isConfirmed) { let fuels = JSON.parse(localStorage.getItem('fuels')) || []; fuels = fuels.filter(f => f.id !== id); localStorage.setItem('fuels', JSON.stringify(fuels)); loadFuelSettings(); Swal.fire({ icon: 'success', title: 'ลบสำเร็จ', showConfirmButton: false, timer: 1500 }); } });
+}
+
+function renderApprovalQueue() {
+    const reports = JSON.parse(localStorage.getItem('reports')) || []; const users = JSON.parse(localStorage.getItem('users')) || []; const container = document.getElementById('admin-verification-queue'); container.innerHTML = '';
+    const sortedReports = reports.slice().reverse().sort((a,b) => (a.approve_disbursement === 'P' ? -1 : 1)); if (sortedReports.length === 0) { return; }
+    sortedReports.forEach(r => {
+        let u = users.find(x => x.user_id === r.user_id) || {}; let fullName = `${u.prefix||''}${u.firstname||''} ${u.lastname||''}`; let actionButtons = '';
+        if(r.approve_disbursement === 'P') { actionButtons = `<div class="mt-3"><button class="btn-pill btn-green me-2" onclick="processApproval('${r.report_id}', 'Y')">✔️ อนุมัติ</button><button class="btn-pill btn-red" onclick="processApproval('${r.report_id}', 'N')">❌ ไม่อนุมัติ</button></div>`; } 
+        else { let statusLabel = r.approve_disbursement === 'Y' ? 'อนุมัติแล้ว' : 'ปฏิเสธคำขอ'; let reasonText = r.reason ? `<div class="text-danger mt-2" style="font-size:13px;">เหตุผล: ${r.reason}</div>` : ''; actionButtons = `<div class="mt-3 fw-bold">สถานะ: <span class="status-tag status-${r.approve_disbursement}">${statusLabel}</span> ${reasonText}</div>`; }
         let proofImg = r.image_file ? `<img src="${r.image_file}" class="receipt-img">` : '';
-        
-        container.innerHTML += `<div class="white-card d-flex flex-column flex-md-row justify-content-between align-items-start gap-4">
-            <div class="flex-grow-1" style="width: 100%;">
-                <div class="fw-bold fs-6 mb-2" style="color:#112246;">ผู้เบิก: ${fullName} (รหัส: ${r.user_id})</div>
-                <div><strong>วันที่:</strong> ${r.work_date} | <strong>งาน:</strong> ${r.work_detail}</div>
-                <div><strong>ประเภท:</strong> ${r.fuel_type} | <strong>ระยะทาง:</strong> ${r.distance_km} กม.</div>
-                <div class="fw-bold mt-2 text-success" style="font-size: 18px;">ยอดเงินเบิก: ฿${r.reimbursable_expense}</div>
-                ${actionButtons}
-            </div>
-            <div style="width: 100%; max-width: 250px;">
-                ${proofImg}
-            </div>
-        </div>`;
+        container.innerHTML += `<div class="white-card d-flex flex-column flex-md-row justify-content-between align-items-start gap-4"><div class="flex-grow-1" style="width: 100%;"><div class="fw-bold fs-6 mb-2" style="color:#112246;">ผู้เบิก: ${fullName} (รหัส: ${r.user_id})</div><div><strong>วันที่:</strong> ${r.work_date} | <strong>งาน:</strong> ${r.work_detail}</div><div><strong>ประเภท:</strong> ${r.fuel_type} | <strong>ระยะทาง:</strong> ${r.distance_km} กม.</div><div class="fw-bold mt-2 text-success" style="font-size: 18px;">ยอดเงินเบิก: ฿${r.reimbursable_expense}</div>${actionButtons}</div><div style="width: 100%; max-width: 250px;">${proofImg}</div></div>`;
     });
 }
 

@@ -93,15 +93,6 @@ body {
 
 .logo-container .title { color: #112246; font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
 .logo-container .subtitle { color: #94a3b8; font-size: 11px; letter-spacing: 4px; font-weight: 700; }
-.user-badge {
-    background-color: #eff6ff;
-    color: #2563eb;
-    padding: 6px 16px;
-    border-radius: 30px;
-    font-size: 13px;
-    font-weight: 700;
-    border: 1px solid #dbeafe;
-}
 
 .window-controls { display: flex; gap: 6px; }
 .win-btn { width: 28px; height: 28px; display: flex; justify-content: center; align-items: center; border-radius: 6px; cursor: pointer; font-size: 13px; color: #94a3b8; transition: 0.2s; }
@@ -147,12 +138,6 @@ body {
     height: 3px;
     background-color: #2563eb;
     border-radius: 3px;
-}
-
-#admin-user-cards-list, #admin-verification-queue {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-    gap: 24px;
 }
 
 .white-card {
@@ -203,8 +188,10 @@ body {
     border: 1px solid #e2e8f0;
     box-shadow: 0 4px 20px rgba(0,0,0,0.02);
 }
-.summary-box .col-md-6:first-child .summary-card { border-left: 4px solid #2563eb; }
-.summary-box .col-md-6:last-child .summary-card { border-left: 4px solid #10b981; }
+.summary-box .col-md-6:first-child .summary-card,
+.summary-box .col-md-4:first-child .summary-card { border-left: 4px solid #2563eb; }
+.summary-box .col-md-6:last-child .summary-card,
+.summary-box .col-md-4:nth-child(2) .summary-card { border-left: 4px solid #10b981; }
 
 .summary-card h3 { color: #64748b; margin-bottom: 8px; font-size: 14px; font-weight: 600; text-transform: uppercase; }
 .summary-card p { color: #1e293b; font-size: 28px; font-weight: 700; }
@@ -262,7 +249,8 @@ body {
 .status-N { background-color: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
 
 #admin-verification-queue:empty::after, 
-#user-report-list:empty::after {
+#user-report-list:empty::after,
+#admin-reports-tbody:empty::after {
     content: "📥 ยังไม่มีรายการข้อมูลในระบบขณะนี้";
     display: block;
     grid-column: 1 / -1;
@@ -280,53 +268,24 @@ body {
     background: radial-gradient(circle at center, #ffffff 0%, #f0f4f8 100%);
 }
 
-@media print {
-    body, .mobile-container, .main-content, .view-body { 
-        background-color: #ffffff !important; 
-        height: auto !important; 
-        overflow: visible !important; 
-    }
-    /* ซ่อนเมนูและปุ่มที่ไม่จำเป็นบนหน้ากระดาษ */
-    .sidebar, .header, .btn-pill, .window-controls { 
-        display: none !important; 
-    }
-    .view-body { padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
-    .blue-panel { 
-        box-shadow: none !important; 
-        border: none !important; 
-        padding: 0 !important; 
-        margin: 0 !important; 
-    }
-    .panel-title { 
-        color: #000 !important; 
-        border-bottom: 2px solid #000 !important; 
-    }
-    .panel-title::after { display: none !important; }
-    .data-table th, .data-table td { 
-        border: 1px solid #000 !important; 
-        color: #000 !important; 
-        padding: 8px !important;
-    }
-}
-
 /* =========================================
-   แก้ไขส่วนของรูปภาพโปรไฟล์ (Avatar & Image Handling)
+   การจัดการรูปภาพ (Avatar & Images)
 ========================================= */
 
-/* รูปโปรไฟล์วงกลมขนาดใหญ่ (ในหน้าข้อมูลส่วนตัว) */
+/* รูปวงกลมขนาดใหญ่ (หน้าโปรไฟล์) */
 .avatar {
-    width: 120px !important;       /* กำหนดความกว้างตายตัว */
-    height: 120px !important;      /* กำหนดความสูงตายตัว ให้เท่ากับความกว้าง */
-    border-radius: 50% !important; /* ทำเป็นวงกลม */
-    object-fit: cover !important;  /* สำคัญมาก! ตัดภาพส่วนที่เกินออก ไม่ให้ภาพยืดหรือบี้ */
-    object-position: center !important; /* จัดให้อยู่กึ่งกลางเสมอ */
+    width: 120px !important;
+    height: 120px !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    object-position: center !important;
     border: 4px solid #ffffff;
     box-shadow: 0 4px 14px rgba(0,0,0,0.08);
     display: block;
     margin: 0 auto;
 }
 
-/* รูปโปรไฟล์วงกลมขนาดเล็ก (ในตารางรายชื่อพนักงาน Admin) */
+/* รูปวงกลมขนาดเล็ก (ในตารางรายชื่อ) */
 .avatar-sm {
     width: 45px !important;
     height: 45px !important;
@@ -338,11 +297,53 @@ body {
 
 /* รูปหลักฐานแนบเบิกน้ำมัน (สลิป/หน้าปัดรถ) */
 .receipt-img {
-    width: 100%;                  /* กางเต็มความกว้างของการ์ด */
-    height: 180px;                /* กำหนดความสูงสูงสุด */
-    object-fit: cover;            /* ตัดส่วนเกินออก ไม่ให้รูปเสียทรง */
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
     object-position: center;
     border-radius: 8px;
     border: 1px solid #cbd5e1;
     margin-top: 15px;
+}
+
+/* =========================================
+   ตั้งค่าสำหรับการสั่งพิมพ์ (Print Media)
+========================================= */
+@media print {
+    /* ซ่อนคลาส no-print และอื่นๆ ที่ไม่จำเป็นบนกระดาษ */
+    .no-print, .sidebar, .header, .btn-pill, .window-controls { 
+        display: none !important; 
+    }
+    
+    body, .mobile-container, .main-content, .view-body { 
+        background-color: #ffffff !important; 
+        height: auto !important; 
+        overflow: visible !important; 
+    }
+    
+    .view-body { 
+        padding: 0 !important; 
+        margin: 0 !important; 
+        max-width: 100% !important; 
+    }
+    
+    .blue-panel { 
+        box-shadow: none !important; 
+        border: none !important; 
+        padding: 0 !important; 
+        margin: 0 !important; 
+    }
+    
+    .panel-title { 
+        color: #000 !important; 
+        border-bottom: 2px solid #000 !important; 
+    }
+    
+    .panel-title::after { display: none !important; }
+    
+    .data-table th, .data-table td { 
+        border: 1px solid #000 !important; 
+        color: #000 !important; 
+        padding: 8px !important;
+    }
 }

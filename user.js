@@ -3,9 +3,18 @@ let currentRate = 0;
 
 document.addEventListener("DOMContentLoaded", () => {
     if (!currentUserId) { window.location.href = 'login.html'; return; }
-    updateHeaderDisplay(); // อัปเดตข้อมูลแถบบนขวา
+    updateHeaderDisplay(); 
     loadUserProfile();
     populateFuelDropdown();
+    
+    // ตั้งค่าตัวเลือกเดือนเริ่มต้นให้ล็อกเข้าเดือนปัจจุบันโดยอัตโนมัติ
+    const now = new Date();
+    const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+    const monthInput = document.getElementById('user-report-month');
+    if (monthInput) {
+        monthInput.value = currentMonthStr;
+    }
+    
     switchTab('edit'); 
 });
 
@@ -45,37 +54,27 @@ function updateProfileData() {
     let users = JSON.parse(localStorage.getItem('users'));
     const idx = users.findIndex(user => user.user_id === currentUserId);
     if(idx !== -1) {
-        
         const executeUpdate = (base64Img) => {
             users[idx].prefix = document.getElementById('edit-prefix').value;
             users[idx].firstname = document.getElementById('edit-firstname').value.trim();
             users[idx].lastname = document.getElementById('edit-lastname').value.trim();
             users[idx].password = document.getElementById('edit-password').value;
             users[idx].phone_number = document.getElementById('edit-phone').value.trim();
-            if(base64Img) users[idx].avatar = base64Img; // อัปเดตเฉพาะถ้ามีการเลือกรูปใหม่
+            if(base64Img) users[idx].avatar = base64Img; 
 
             localStorage.setItem('users', JSON.stringify(users));
-            
             document.getElementById('profile-avatar-display').src = users[idx].avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150";
-            document.getElementById('edit-avatar').value = ''; // เคลียร์ช่องไฟล์
-            updateHeaderDisplay(); // สั่งให้อัปเดตมุมขวาบนด้วย
+            document.getElementById('edit-avatar').value = ''; 
+            updateHeaderDisplay(); 
             Swal.fire({ icon: 'success', title: 'อัปเดตสำเร็จ', text: 'ข้อมูลส่วนตัวของคุณถูกบันทึกแล้ว', confirmButtonColor: '#2563eb' });
         };
-
         const fileInput = document.getElementById('edit-avatar');
-        if (fileInput.files.length > 0) {
-            const reader = new FileReader();
-            reader.onload = function(e) { executeUpdate(e.target.result); };
-            reader.readAsDataURL(fileInput.files[0]);
-        } else {
-            executeUpdate(null);
-        }
+        if (fileInput.files.length > 0) { const reader = new FileReader(); reader.onload = function(e) { executeUpdate(e.target.result); }; reader.readAsDataURL(fileInput.files[0]); } else { executeUpdate(null); }
     }
 }
 
 function populateFuelDropdown() {
-    const fuels = JSON.parse(localStorage.getItem('fuels')) || [];
-    const dropdown = document.getElementById('w-fuel-type');
+    const fuels = JSON.parse(localStorage.getItem('fuels')) || []; const dropdown = document.getElementById('w-fuel-type');
     dropdown.innerHTML = '<option value="">-- เลือกประเภทรถ/น้ำมัน --</option>';
     fuels.forEach(f => { dropdown.innerHTML += `<option value="${f.name}" data-rate="${f.rate}">[${f.type}] ${f.name} (฿${f.rate}/กม.)</option>`; });
 }
@@ -109,21 +108,69 @@ function saveWorkReport() {
             calculateLiveExpense(); switchTab('report');
         });
     };
-
     if (fileInput.files.length > 0) { const reader = new FileReader(); reader.onload = function(e) { executeSaving(e.target.result); }; reader.readAsDataURL(fileInput.files[0]); } else { executeSaving(""); }
 }
 
+// ---------------------------------------------------------
+// ฟังก์ชันแสดงประวัติพนักงานและออกรายงานสลิป
+// ---------------------------------------------------------
 function renderUserReports() {
-    const reports = JSON.parse(localStorage.getItem('reports')) || []; const tbody = document.getElementById('user-report-list'); tbody.innerHTML = '';
-    let totalBaht = 0, totalKm = 0; const myReports = reports.filter(r => r.user_id === currentUserId).reverse();
-    myReports.forEach((r, idx) => {
-        if(r.approve_disbursement === 'Y' || r.approve_disbursement === 'P') { totalBaht += parseFloat(r.reimbursable_expense); totalKm += parseFloat(r.distance_km); }
-        let statusText = r.approve_disbursement === 'P' ? 'รอตรวจสอบ' : (r.approve_disbursement === 'Y' ? 'อนุมัติ' : 'ไม่อนุมัติ');
-        let rejectReason = r.approve_disbursement === 'N' && r.reason ? `<div class="text-danger mt-1" style="font-size:12px;">เหตุผล: ${r.reason}</div>` : '';
-        let actionBtns = r.approve_disbursement === 'P' ? `<button class="btn-pill btn-edit py-1 px-2" style="font-size:12px;" onclick="editReport('${r.report_id}')">✏️ แก้ไข</button> <button class="btn-pill btn-red py-1 px-2 mt-1" style="font-size:12px;" onclick="deleteReport('${r.report_id}')">🗑️ ลบ</button>` : '-';
-        tbody.innerHTML += `<tr><td>${idx + 1}</td><td>${r.work_date}</td><td>${r.work_detail}</td><td>${r.fuel_type}</td><td class="text-muted" style="font-size:12px;">${r.distance_km} กม. x ${r.rate_used||0} ฿</td><td class="fw-bold text-success">฿${r.reimbursable_expense}</td><td><span class="status-tag status-${r.approve_disbursement}">${statusText}</span>${rejectReason}</td><td>${actionBtns}</td></tr>`;
+    const reports = JSON.parse(localStorage.getItem('reports')) || []; 
+    const tbody = document.getElementById('user-report-list'); 
+    tbody.innerHTML = '';
+    
+    let allTimeBaht = 0;
+    let allTimeKm = 0;
+    let filteredCount = 0;
+    let filteredKm = 0; 
+    let filteredBaht = 0;
+    
+    const selectedMonth = document.getElementById('user-report-month').value; 
+    const myReports = reports.filter(r => r.user_id === currentUserId).reverse();
+    
+    // คำนวณยอดรวมสะสมตลอดชีพ (ไม่สนตัวกรอง)
+    myReports.forEach(r => {
+        if(r.approve_disbursement === 'Y' || r.approve_disbursement === 'P') { 
+            allTimeBaht += parseFloat(r.reimbursable_expense) || 0; 
+            allTimeKm += parseFloat(r.distance_km) || 0; 
+        }
     });
-    document.getElementById('sum-total').innerText = totalBaht.toFixed(2); document.getElementById('sum-km').innerText = totalKm;
+
+    // กรองตารางตามเดือนที่เลือก (เพื่อให้ตารางแสดงแค่เดือนนั้นเวลาสั่งพิมพ์)
+    let displayReports = myReports;
+    if (selectedMonth) {
+        displayReports = displayReports.filter(r => r.work_date.startsWith(selectedMonth));
+    }
+
+    if (displayReports.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">📥 ไม่พบข้อมูลรายงานในเดือนนี้</td></tr>';
+    } else {
+        displayReports.forEach((r, idx) => {
+            if(r.approve_disbursement === 'Y' || r.approve_disbursement === 'P') {
+                filteredKm += parseFloat(r.distance_km) || 0;
+                filteredBaht += parseFloat(r.reimbursable_expense) || 0;
+                filteredCount++;
+            }
+
+            let statusText = r.approve_disbursement === 'P' ? 'รอตรวจสอบ' : (r.approve_disbursement === 'Y' ? 'อนุมัติ' : 'ไม่อนุมัติ');
+            let rejectReason = r.approve_disbursement === 'N' && r.reason ? `<div class="text-danger mt-1" style="font-size:12px;">เหตุผล: ${r.reason}</div>` : '';
+            
+            // เพิ่มคลาส no-print เพื่อซ่อนปุ่มจัดการตอนสั่งพิมพ์
+            let actionBtns = r.approve_disbursement === 'P' ? `<div class="no-print"><button class="btn-pill btn-edit py-1 px-2" style="font-size:12px;" onclick="editReport('${r.report_id}')">✏️ แก้ไข</button> <button class="btn-pill btn-red py-1 px-2 mt-1" style="font-size:12px;" onclick="deleteReport('${r.report_id}')">🗑️ ลบ</button></div>` : '<span class="no-print">-</span>';
+            
+            tbody.innerHTML += `<tr><td>${idx + 1}</td><td>${r.work_date}</td><td>${r.work_detail}</td><td>${r.fuel_type}</td><td class="text-muted" style="font-size:12px;">${r.distance_km} กม. x ${r.rate_used||0} ฿</td><td class="fw-bold text-success">฿${r.reimbursable_expense}</td><td><span class="status-tag status-${r.approve_disbursement}">${statusText}</span>${rejectReason}</td><td class="no-print">${actionBtns}</td></tr>`;
+        });
+    }
+    
+    // อัปเดตการ์ดสรุปด้านบน
+    document.getElementById('sum-total').innerText = allTimeBaht.toFixed(2); 
+    document.getElementById('sum-km').innerText = allTimeKm.toFixed(2);
+    document.getElementById('sum-month-km').innerText = filteredKm.toFixed(2);
+
+    // อัปเดตกล่องสลิปบิลด้านล่างรายงาน
+    document.getElementById('user-bill-count').innerText = `${filteredCount} รายการ`;
+    document.getElementById('user-bill-km').innerText = `${filteredKm.toFixed(2)} กม.`;
+    document.getElementById('user-bill-total').innerText = `฿${filteredBaht.toFixed(2)}`;
 }
 
 function deleteReport(id) {
