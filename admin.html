@@ -30,7 +30,6 @@
 
             <div class="view-body p-4" style="height: calc(100vh - 70px); overflow-y: auto;">
                 
-                <!-- แท็บ: ข้อมูลส่วนตัวแอดมิน -->
                 <div id="adm-profile-view" class="adm-tab-view">
                     <div class="blue-panel">
                         <h4 class="fw-bold mb-4">👤 แก้ไขข้อมูลส่วนตัว (ผู้ดูแลระบบ)</h4>
@@ -43,14 +42,12 @@
                             </div>
                             <div class="col-md-8">
                                 <div class="row g-3">
-                                    <div class="col-sm-3"><label class="form-label">คำนำหน้า</label>
-                                        <select id="adm-prefix" class="form-select"><option value="นาย">นาย</option><option value="นาง">นาง</option><option value="นางสาว">นางสาว</option></select>
-                                    </div>
-                                    <div class="col-sm-4"><label class="form-label">ชื่อจริง</label><input type="text" id="adm-firstname" class="form-control"></div>
-                                    <div class="col-sm-5"><label class="form-label">นามสกุล</label><input type="text" id="adm-lastname" class="form-control"></div>
-                                    <div class="col-sm-6"><label class="form-label">รหัสพนักงาน (ห้ามแก้ไข)</label><input type="text" id="adm-userid" class="form-control" disabled></div>
+                                    <div class="col-sm-6"><label class="form-label">ชื่อจริง (frstname)</label><input type="text" id="adm-frstname" class="form-control"></div>
+                                    <div class="col-sm-6"><label class="form-label">นามสกุล (lastname)</label><input type="text" id="adm-lastname" class="form-control"></div>
+                                    <div class="col-sm-6"><label class="form-label">รหัสพนักงาน (user_id)</label><input type="text" id="adm-userid" class="form-control" disabled></div>
                                     <div class="col-sm-6"><label class="form-label">รหัสผ่าน</label><input type="password" id="adm-password" class="form-control"></div>
-                                    <div class="col-sm-12"><label class="form-label">เบอร์โทรศัพท์</label><input type="text" id="adm-phone" class="form-control"></div>
+                                    <div class="col-sm-6"><label class="form-label">เบอร์โทรศัพท์ (Phone_number)</label><input type="text" id="adm-phone" class="form-control"></div>
+                                    <div class="col-sm-6"><label class="form-label">ตำแหน่ง (job_position)</label><input type="text" id="adm-position" class="form-control" disabled></div>
                                 </div>
                                 <button class="btn-pill btn-blue mt-4 px-4" onclick="window.updateAdminProfile()">💾 บันทึกการเปลี่ยนแปลง</button>
                             </div>
@@ -58,13 +55,11 @@
                     </div>
                 </div>
 
-                <!-- แท็บ: อนุมัติเบิกจ่าย -->
                 <div id="adm-approves-view" class="adm-tab-view" style="display:none;">
                     <h4 class="fw-bold text-dark mb-4">📋 รายการรอยืนยันอนุมัติค่าเดินทาง</h4>
                     <div id="admin-verification-queue"></div>
                 </div>
 
-                <!-- แท็บ: ตั้งค่าราคาน้ำมัน -->
                 <div id="adm-prices-view" class="adm-tab-view" style="display:none;">
                     <div class="white-card p-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -72,17 +67,14 @@
                             <button class="btn-pill btn-blue" onclick="window.addNewFuel()">➕ เพิ่มเรทราคาใหม่</button>
                         </div>
                         <div class="table-responsive">
-                            <table class="table table-bordered table-striped align-middle text-center">
-                                <thead class="table-dark"><tr><th>รหัส</th><th>กลุ่มเชื้อเพลิง</th><th>ชื่อประเภทรถ / เชื้อเพลิง</th><th>อัตราจ่าย (บาท/กม.)</th><th>การจัดการ</th></tr></thead>
+                            <table class="table table-bordered table-striped align-middle">
+                                <thead class="table-dark"><tr><th>รหัส</th><th>ชื่อประเภทรถ / เชื้อเพลิง</th><th>อัตราจ่าย (บาท/กม.)</th><th>การจัดการ</th></tr></thead>
                                 <tbody id="admin-fuel-tbody"></tbody>
                             </table>
                         </div>
-                        <!-- คืนค่าปุ่มบันทึกราคาน้ำมันแบบกลุ่ม -->
-                        <div class="text-center mt-4"><button class="btn-pill btn-white px-4" onclick="window.updateFuelPrices()">💾 บันทึกอัตราอัปเดต</button></div>
                     </div>
                 </div>
 
-                <!-- แท็บ: จัดการพนักงาน -->
                 <div id="adm-users-view" class="adm-tab-view" style="display:none;">
                     <div class="white-card p-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -90,15 +82,14 @@
                             <button class="btn-pill btn-blue" onclick="window.addNewUser()">➕ เพิ่มพนักงานใหม่</button>
                         </div>
                         <div class="table-responsive">
-                            <table class="table table-bordered align-middle">
-                                <thead class="table-dark"><tr><th>ลำดับ</th><th>รูปภาพ</th><th>รหัสพนักงาน</th><th>ชื่อ-นามสกุล</th><th>ตำแหน่งงาน</th><th>เบอร์โทรศัพท์</th><th>จัดการ</th></tr></thead>
+                            <table class="table table-bordered align-middle" style="font-size: 13px;">
+                                <thead class="table-dark"><tr><th>รูป</th><th>รหัสพนักงาน</th><th>ชื่อ-นามสกุล</th><th>ตำแหน่ง/แผนก</th><th>สถานที่/เริ่มงาน</th><th>เบอร์โทร</th><th>จัดการ</th></tr></thead>
                                 <tbody id="admin-user-tbody"></tbody>
                             </table>
                         </div>
                     </div>
                 </div>
 
-                <!-- แท็บ: ออกรายงาน -->
                 <div id="adm-reports-view" class="adm-tab-view" style="display:none;">
                     <div class="white-card p-4">
                         <div class="d-flex justify-content-between align-items-center mb-4 no-print">
@@ -119,7 +110,7 @@
 
                         <div class="table-responsive">
                             <table class="table table-bordered align-middle text-center">
-                                <thead class="table-primary"><tr><th>Tanggal</th><th>รหัสพนักงาน</th><th>ชื่องาน / รายละเอียด</th><th>ประเภทรถ/เชื้อเพลิง</th><th>ระยะทาง (กม.)</th><th>ยอดเงินเบิก (บาท)</th><th>สถานะ</th></tr></thead>
+                                <thead class="table-primary"><tr><th>วันที่ทำงาน</th><th>เวลา</th><th>รหัสพนักงาน</th><th>รายละเอียดงาน</th><th>ระยะทาง (กม.)</th><th>ยอดเงินเบิก (บาท)</th><th>สถานะ</th></tr></thead>
                                 <tbody id="admin-reports-tbody"></tbody>
                             </table>
                         </div>

@@ -29,8 +29,8 @@ async function updateHeaderDisplay() {
     const docSnap = await getDoc(doc(db, "users", adminSessionId));
     if(docSnap.exists()) {
         const u = docSnap.data();
-        document.getElementById('header-user-name').innerText = `${u.firstname} ${u.lastname}`;
-        document.getElementById('header-avatar').src = u.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150";
+        document.getElementById('header-user-name').innerText = `${u.frstname} ${u.lastname}`;
+        document.getElementById('header-avatar').src = u.Image_file || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150";
     }
 }
 
@@ -51,26 +51,25 @@ async function loadAdminProfile() {
     const docSnap = await getDoc(doc(db, "users", adminSessionId));
     if(docSnap.exists()) {
         const u = docSnap.data();
-        document.getElementById('adm-prefix').value = u.prefix || "นาย";
-        document.getElementById('adm-firstname').value = u.firstname;
-        document.getElementById('adm-lastname').value = u.lastname;
-        document.getElementById('adm-userid').value = u.user_id;
-        document.getElementById('adm-password').value = u.password;
+        document.getElementById('adm-frstname').value = u.frstname || "";
+        document.getElementById('adm-lastname').value = u.lastname || "";
+        document.getElementById('adm-userid').value = u.user_id || "";
+        document.getElementById('adm-password').value = u.password || "";
         document.getElementById('adm-phone').value = u.Phone_number || "";
-        document.getElementById('adm-avatar-display').src = u.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150";
+        document.getElementById('adm-position').value = u.job_position || "admin";
+        document.getElementById('adm-avatar-display').src = u.Image_file || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150";
     }
 }
 
 window.updateAdminProfile = async function() {
     const executeUpdate = async (base64Img) => {
         let updateData = {
-            prefix: document.getElementById('adm-prefix').value,
-            firstname: document.getElementById('adm-firstname').value.trim(),
+            frstname: document.getElementById('adm-frstname').value.trim(),
             lastname: document.getElementById('adm-lastname').value.trim(),
             password: document.getElementById('adm-password').value,
             Phone_number: document.getElementById('adm-phone').value.trim()
         };
-        if(base64Img) updateData.avatar = base64Img;
+        if(base64Img) updateData.Image_file = base64Img;
         
         await updateDoc(doc(db, "users", adminSessionId), updateData);
         if(base64Img) document.getElementById('adm-avatar-display').src = base64Img;
@@ -93,36 +92,43 @@ async function renderEmployeeList() {
     
     const querySnapshot = await getDocs(collection(db, "users"));
     tbody.innerHTML = '';
-    let idx = 1;
     querySnapshot.forEach((docSnap) => {
         const u = docSnap.data();
-        let actionBtns = u.user_id === adminSessionId ? '<span class="text-muted" style="font-size:12px;">(บัญชีของคุณ)</span>' : `<button class="btn-pill btn-edit py-1 px-2 me-1" style="font-size:12px;" onclick="window.editUser('${u.user_id}')">✏️ แก้ไข</button> <button class="btn-pill btn-red py-1 px-2" style="font-size:12px;" onclick="window.deleteUser('${u.user_id}')">🗑️ ลบ</button>`;
+        let actionBtns = u.user_id === adminSessionId ? '<span class="text-muted">(คุณ)</span>' : `<button class="btn-pill btn-edit py-1 px-2 me-1" style="font-size:11px;" onclick="window.editUser('${u.user_id}')">✏️</button> <button class="btn-pill btn-red py-1 px-2" style="font-size:11px;" onclick="window.deleteUser('${u.user_id}')">🗑️</button>`;
         let roleBadge = u.role === 'admin' ? '<span class="badge bg-primary">Admin</span>' : '<span class="badge bg-secondary">User</span>';
-        let avatarImg = u.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150";
-        tbody.innerHTML += `<tr><td>${idx++}</td><td><img src="${avatarImg}" class="avatar-sm"></td><td><strong>${u.user_id}</strong> <br>${roleBadge}</td><td>${u.prefix || ''}${u.firstname} ${u.lastname}</td><td>${u.job_position || 'พนักงาน'}</td><td>${u.Phone_number || '-'}</td><td>${actionBtns}</td></tr>`;
+        let avatarImg = u.Image_file || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150";
+        tbody.innerHTML += `<tr>
+            <td><img src="${avatarImg}" class="avatar-sm"></td>
+            <td><strong>${u.user_id}</strong><br>${roleBadge}</td>
+            <td>${u.frstname} ${u.lastname}</td>
+            <td>${u.job_position}<br><small class="text-muted">${u.Department}</small></td>
+            <td>${u.work_location}<br><small class="text-muted">${u.start_date}</small></td>
+            <td>${u.Phone_number}</td>
+            <td>${actionBtns}</td>
+        </tr>`;
     });
 }
 
 window.addNewUser = function() {
     Swal.fire({
         title: 'เพิ่มพนักงานใหม่',
-        html: `<input id="swal-uid" class="swal2-input" placeholder="รหัสพนักงาน (Username)" style="width: 80%;">
-               <input id="swal-pass" class="swal2-input" placeholder="รหัสผ่าน (Password)" style="width: 80%;">
-               <input id="swal-fname" class="swal2-input" placeholder="ชื่อจริง" style="width: 80%;">
-               <input id="swal-lname" class="swal2-input" placeholder="นามสกุล" style="width: 80%;">
-               <input id="swal-position" class="swal2-input" placeholder="ตำแหน่งงาน" style="width: 80%;">
-               <input id="swal-dept" class="swal2-input" placeholder="แผนก" style="width: 80%;">
-               <input id="swal-loc" class="swal2-input" placeholder="สถานที่ปฏิบัติงาน" style="width: 80%;">
-               <input id="swal-phone" class="swal2-input" placeholder="เบอร์โทรศัพท์" style="width: 80%;">
-               <input id="swal-sdate" class="swal2-input" type="date" style="width: 80%;">
+        html: `<input id="swal-uid" class="swal2-input" placeholder="รหัสพนักงาน (user_id)" style="width: 80%;">
+               <input id="swal-pass" class="swal2-input" placeholder="รหัสผ่าน" style="width: 80%;">
+               <input id="swal-fname" class="swal2-input" placeholder="ชื่อจริง (frstname)" style="width: 80%;">
+               <input id="swal-lname" class="swal2-input" placeholder="นามสกุล (lastname)" style="width: 80%;">
+               <input id="swal-position" class="swal2-input" placeholder="ตำแหน่งงาน (job_position)" style="width: 80%;">
+               <input id="swal-loc" class="swal2-input" placeholder="สถานที่ปฏิบัติงาน (work_location)" style="width: 80%;">
+               <input id="swal-dept" class="swal2-input" placeholder="แผนก (Department)" style="width: 80%;">
+               <input id="swal-sdate" class="swal2-input" type="date" placeholder="วันที่เริ่มงาน" style="width: 80%;">
+               <input id="swal-phone" class="swal2-input" placeholder="เบอร์โทรศัพท์ (Phone_number)" style="width: 80%;">
                <select id="swal-role" class="swal2-input" style="width: 80%;"><option value="user">User</option><option value="admin">Admin</option></select>`,
         showCancelButton: true, confirmButtonText: 'บันทึก',
         preConfirm: () => {
             const uid = document.getElementById('swal-uid').value.trim();
             if(!uid) { Swal.showValidationMessage('กรุณากรอกรหัสพนักงาน'); return false; }
             return {
-                user_id: uid, password: document.getElementById('swal-pass').value, firstname: document.getElementById('swal-fname').value, lastname: document.getElementById('swal-lname').value,
-                job_position: document.getElementById('swal-position').value || 'พนักงานทั่วไป', Department: document.getElementById('swal-dept').value || '-', work_location: document.getElementById('swal-loc').value || '-', Phone_number: document.getElementById('swal-phone').value || '-', start_date: document.getElementById('swal-sdate').value || '', role: document.getElementById('swal-role').value
+                user_id: uid, password: document.getElementById('swal-pass').value, frstname: document.getElementById('swal-fname').value, lastname: document.getElementById('swal-lname').value,
+                job_position: document.getElementById('swal-position').value || '-', work_location: document.getElementById('swal-loc').value || '-', Department: document.getElementById('swal-dept').value || '-', start_date: document.getElementById('swal-sdate').value || '', Phone_number: document.getElementById('swal-phone').value || '-', role: document.getElementById('swal-role').value
             }
         }
     }).then(async (result) => {
@@ -130,7 +136,7 @@ window.addNewUser = function() {
             let data = result.value;
             const existing = await getDoc(doc(db, "users", data.user_id));
             if(existing.exists()){ return Swal.fire('ข้อผิดพลาด', 'รหัสพนักงานนี้มีอยู่แล้ว!', 'error'); }
-            data.avatar = "";
+            data.Image_file = "";
             await setDoc(doc(db, "users", data.user_id), data);
             renderEmployeeList();
             Swal.fire('สำเร็จ', 'เพิ่มพนักงานใหม่เรียบร้อย', 'success');
@@ -144,7 +150,6 @@ window.deleteUser = function(uid) {
     });
 }
 
-// แก้ไขฟังก์ชันแก้ไขข้อมูลพนักงานให้มีช่องรหัสผ่านและเบอร์โทรครบถ้วน
 window.editUser = async function(uid) {
     const docSnap = await getDoc(doc(db, "users", uid));
     if(!docSnap.exists()) return;
@@ -152,29 +157,22 @@ window.editUser = async function(uid) {
 
     Swal.fire({
         title: `แก้ไขข้อมูล: ${uid}`,
-        html: `<div style="text-align: left; font-size: 14px; margin-bottom: 5px; padding-left: 10%;">รหัสผ่านใหม่ (เว้นว่างหากไม่เปลี่ยน)</div>
-               <input id="swal-edit-pass" class="swal2-input" placeholder="รหัสผ่านใหม่" type="text" style="width: 80%;">
-               <div style="text-align: left; font-size: 14px; margin-top: 15px; margin-bottom: 5px; padding-left: 10%;">ข้อมูลส่วนตัวพนักงาน</div>
-               <input id="swal-edit-fname" class="swal2-input" value="${u.firstname}" placeholder="ชื่อจริง" style="width: 80%;">
-               <input id="swal-edit-lname" class="swal2-input" value="${u.lastname}" placeholder="นามสกุล" style="width: 80%;">
-               <input id="swal-edit-position" class="swal2-input" value="${u.job_position || ''}" placeholder="ตำแหน่ง" style="width: 80%;">
-               <input id="swal-edit-phone" class="swal2-input" value="${u.Phone_number || ''}" placeholder="เบอร์โทรศัพท์" style="width: 80%;">
+        html: `<input id="swal-edit-fname" class="swal2-input" value="${u.frstname}" placeholder="ชื่อจริง">
+               <input id="swal-edit-lname" class="swal2-input" value="${u.lastname}" placeholder="นามสกุล">
+               <input id="swal-edit-position" class="swal2-input" value="${u.job_position || ''}" placeholder="ตำแหน่ง">
+               <input id="swal-edit-dept" class="swal2-input" value="${u.Department || ''}" placeholder="แผนก">
                <select id="swal-edit-role" class="swal2-input" style="width: 80%;"><option value="user" ${u.role==='user'?'selected':''}>User</option><option value="admin" ${u.role==='admin'?'selected':''}>Admin</option></select>`,
-        showCancelButton: true, confirmButtonText: 'บันทึก', confirmButtonColor: '#f59e0b'
+        showCancelButton: true, confirmButtonText: 'บันทึก'
     }).then(async (result) => {
         if (result.isConfirmed) {
-            let updateData = {
-                firstname: document.getElementById('swal-edit-fname').value, 
+            await updateDoc(doc(db, "users", uid), {
+                frstname: document.getElementById('swal-edit-fname').value, 
                 lastname: document.getElementById('swal-edit-lname').value, 
                 job_position: document.getElementById('swal-edit-position').value,
-                Phone_number: document.getElementById('swal-edit-phone').value,
+                Department: document.getElementById('swal-edit-dept').value,
                 role: document.getElementById('swal-edit-role').value
-            };
-            let newPass = document.getElementById('swal-edit-pass').value.trim();
-            if(newPass !== '') { updateData.password = newPass; }
-
-            await updateDoc(doc(db, "users", uid), updateData);
-            renderEmployeeList(); Swal.fire('บันทึกสำเร็จ', 'อัปเดตข้อมูลพนักงานเรียบร้อย', 'success');
+            });
+            renderEmployeeList(); Swal.fire('บันทึกสำเร็จ', '', 'success');
         }
     });
 }
@@ -187,7 +185,7 @@ async function populateReportUserDropdown() {
     const querySnapshot = await getDocs(collection(db, "users"));
     querySnapshot.forEach(docSnap => {
         const u = docSnap.data();
-        if (u.role !== 'admin') select.innerHTML += `<option value="${u.user_id}">${u.firstname} ${u.lastname} (${u.user_id})</option>`;
+        if (u.role !== 'admin') select.innerHTML += `<option value="${u.user_id}">${u.frstname} ${u.lastname} (${u.user_id})</option>`;
     });
     select.value = currentValue;
 }
@@ -221,7 +219,7 @@ window.renderAllReports = async function() {
             totalKm += parseFloat(r.distance_km) || 0; 
             totalBaht += parseFloat(r.Reimbursable_expense) || 0;
         }
-        tbody.innerHTML += `<tr><td>${r.work_date}</td><td><strong>${r.user_id}</strong></td><td>${r.work_detail}</td><td>${r.fuel_type || 'ทั่วไป'}</td><td>${r.distance_km}</td><td class="text-success">฿${r.Reimbursable_expense}</td><td><span class="status-tag status-${r.Approve_disbursement}">${statusText}</span></td></tr>`;
+        tbody.innerHTML += `<tr><td>${r.work_date}</td><td>${r.work_time || '-'}</td><td><strong>${r.user_id}</strong></td><td>${r.work_detail}</td><td>${r.distance_km}</td><td class="text-success">฿${r.Reimbursable_expense}</td><td><span class="status-tag status-${r.Approve_disbursement}">${statusText}</span></td></tr>`;
     });
     document.getElementById('rep-sum-count').innerText = `${filtered.length} รายการ`;
     document.getElementById('rep-sum-km').innerText = `${totalKm.toFixed(2)} กม.`;
@@ -252,8 +250,8 @@ async function renderApprovalQueue() {
         
         container.innerHTML += `<div class="white-card d-flex justify-content-between align-items-center mb-3 p-3 border rounded shadow-sm">
             <div>
-                <div class="fw-bold fs-5 text-dark">ผู้ขอเบิก: ${u.firstname || 'ไม่ทราบชื่อ'} (${r.user_id})</div>
-                <div class="text-secondary mt-1">วันที่ทำงาน: <strong>${r.work_date}</strong></div>
+                <div class="fw-bold fs-5 text-dark">ผู้ขอเบิก: ${u.frstname || 'ไม่ทราบชื่อ'} (${r.user_id})</div>
+                <div class="text-secondary mt-1">วันที่ทำงาน: <strong>${r.work_date} (${r.work_time || ''})</strong></div>
                 <div class="text-secondary">รายละเอียด: ${r.work_detail}</div>
                 <div class="mt-2 text-primary fw-bold">ระยะทาง: ${r.distance_km} กม. | ยอดเงินเบิก: ฿${r.Reimbursable_expense}</div>
                 ${actionButtons}
@@ -281,48 +279,23 @@ window.processApproval = function(reportId, newStatus) {
     }
 }
 
-// ปรับปรุงช่องเรทราคาให้แก้ไขพิมพ์ตัวเลขได้
 async function loadFuelSettings() {
-    const tbody = document.getElementById('admin-fuel-tbody'); tbody.innerHTML = '<tr><td colspan="5">กำลังโหลดข้อมูลราคาน้ำมัน...</td></tr>';
+    const tbody = document.getElementById('admin-fuel-tbody'); tbody.innerHTML = '<tr><td colspan="4">กำลังโหลดข้อมูลราคาน้ำมัน...</td></tr>';
     const q = await getDocs(collection(db, "fuels"));
     tbody.innerHTML = '';
     q.forEach(docSnap => {
         const f = docSnap.data();
-        tbody.innerHTML += `<tr>
-            <td>${f.id}</td>
-            <td>${f.type}</td>
-            <td><strong>${f.name}</strong></td>
-            <td><input type="number" step="0.01" class="form-control fuel-rate-input text-center mx-auto" data-id="${f.id}" value="${f.rate}" style="max-width:150px;"></td>
-            <td><button class="btn-pill btn-red py-1 px-2" style="font-size:12px;" onclick="window.deleteFuel('${f.id}')">🗑️ ลบ</button></td>
-        </tr>`;
+        tbody.innerHTML += `<tr><td>${f.id}</td><td><strong>${f.name}</strong></td><td>${f.rate} บาท/กม.</td><td><button class="btn-pill btn-red py-1 px-2" style="font-size:12px;" onclick="window.deleteFuel('${f.id}')">🗑️ ลบ</button></td></tr>`;
     });
-}
-
-// ฟังก์ชันสำหรับบันทึกเรทราคากลางแบบกลุ่มลงฐานข้อมูล Firebase
-window.updateFuelPrices = async function() {
-    const inputs = document.querySelectorAll('.fuel-rate-input');
-    Swal.fire({ title: 'กำลังบันทึกข้อมูล...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-    try {
-        for (let input of inputs) {
-            let id = input.getAttribute('data-id');
-            let newRate = parseFloat(input.value) || 0;
-            await updateDoc(doc(db, "fuels", id), { rate: newRate });
-        }
-        Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', text: 'อัปเดตเรทราคาเชื้อเพลิงทั้งหมดเรียบร้อยแล้ว' });
-        loadFuelSettings();
-    } catch(e) {
-        Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error');
-    }
 }
 
 window.addNewFuel = function() {
     Swal.fire({
         title: 'เพิ่มประเภทเชื้อเพลิง/ราคากลาง',
-        html: `<input id="swal-f-name" class="swal2-input" placeholder="เช่น ดีเซล B7, EV Charge">
-               <input id="swal-f-rate" class="swal2-input" type="number" step="0.01" placeholder="บาท ต่อ กิโลเมตร">
-               <select id="swal-f-type" class="swal2-input"><option value="น้ำมัน">น้ำมัน</option><option value="ไฟฟ้า">ไฟฟ้า</option><option value="แก๊ส">แก๊ส</option></select>`,
+        html: `<input id="swal-f-name" class="swal2-input" placeholder="เช่น ดีเซล B7, รถส่วนตัว">
+               <input id="swal-f-rate" class="swal2-input" type="number" step="0.01" placeholder="บาท ต่อ กิโลเมตร">`,
         showCancelButton: true, confirmButtonText: 'บันทึก',
-        preConfirm: () => { return { name: document.getElementById('swal-f-name').value, rate: parseFloat(document.getElementById('swal-f-rate').value), type: document.getElementById('swal-f-type').value } }
+        preConfirm: () => { return { name: document.getElementById('swal-f-name').value, rate: parseFloat(document.getElementById('swal-f-rate').value) } }
     }).then(async (result) => {
         if(result.isConfirmed && result.value.name && !isNaN(result.value.rate)) {
             let id = "FUEL" + Date.now();

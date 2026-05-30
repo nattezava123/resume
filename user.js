@@ -29,7 +29,6 @@ document.addEventListener("DOMContentLoaded", () => {
         monthInput.value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
         monthInput.addEventListener('change', window.renderUserReports);
     }
-    
     window.switchTab('edit'); 
 });
 
@@ -37,8 +36,8 @@ async function updateHeaderDisplay() {
     const docSnap = await getDoc(doc(db, "users", currentUserId));
     if(docSnap.exists()) {
         const u = docSnap.data();
-        document.getElementById('header-user-name').innerText = `${u.firstname} ${u.lastname}`;
-        document.getElementById('header-avatar').src = u.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150";
+        document.getElementById('header-user-name').innerText = `${u.frstname} ${u.lastname}`;
+        document.getElementById('header-avatar').src = u.Image_file || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150";
     }
 }
 
@@ -55,25 +54,26 @@ async function loadUserProfile() {
     const docSnap = await getDoc(doc(db, "users", currentUserId));
     if(docSnap.exists()) {
         const u = docSnap.data();
-        document.getElementById('edit-prefix').value = u.prefix || "นาย";
-        document.getElementById('edit-firstname').value = u.firstname;
-        document.getElementById('edit-lastname').value = u.lastname;
-        document.getElementById('edit-password').value = u.password;
+        document.getElementById('edit-frstname').value = u.frstname || "";
+        document.getElementById('edit-lastname').value = u.lastname || "";
+        document.getElementById('edit-password').value = u.password || "";
         document.getElementById('edit-phone').value = u.Phone_number || "";
-        document.getElementById('profile-avatar-display').src = u.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150";
+        document.getElementById('edit-position').value = u.job_position || "-";
+        document.getElementById('edit-dept').value = u.Department || "-";
+        document.getElementById('edit-location').value = u.work_location || "-";
+        document.getElementById('profile-avatar-display').src = u.Image_file || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150";
     }
 }
 
 window.updateProfileData = async function() {
     const executeUpdate = async (base64Img) => {
         let updateData = {
-            prefix: document.getElementById('edit-prefix').value,
-            firstname: document.getElementById('edit-firstname').value.trim(),
+            frstname: document.getElementById('edit-frstname').value.trim(),
             lastname: document.getElementById('edit-lastname').value.trim(),
             password: document.getElementById('edit-password').value,
             Phone_number: document.getElementById('edit-phone').value.trim()
         };
-        if(base64Img) updateData.avatar = base64Img;
+        if(base64Img) updateData.Image_file = base64Img;
         
         await updateDoc(doc(db, "users", currentUserId), updateData);
         if(base64Img) document.getElementById('profile-avatar-display').src = base64Img;
@@ -87,11 +87,12 @@ window.updateProfileData = async function() {
 
 async function populateFuelDropdown() {
     const dropdown = document.getElementById('w-fuel-type');
-    dropdown.innerHTML = '<option value="">-- เลือกประเภทรถ/น้ำมัน --</option>';
+    if(!dropdown) return;
+    dropdown.innerHTML = '<option value="">-- เลือกเรทคำนวณ --</option>';
     const querySnapshot = await getDocs(collection(db, "fuels"));
     querySnapshot.forEach(docSnap => {
         const f = docSnap.data();
-        dropdown.innerHTML += `<option value="${f.name}" data-rate="${f.rate}">[${f.type}] ${f.name} (฿${f.rate}/กม.)</option>`;
+        dropdown.innerHTML += `<option value="${f.name}" data-rate="${f.rate}">${f.name} (฿${f.rate}/กม.)</option>`;
     });
 }
 
@@ -106,6 +107,7 @@ window.calculateLiveExpense = function() {
 window.saveWorkReport = async function() {
     const editId = document.getElementById('edit-report-id').value;
     const wDate = document.getElementById('w-date').value;
+    const wTime = document.getElementById('w-time').value;
     const fuelType = document.getElementById('w-fuel-type').value;
     const start = parseFloat(document.getElementById('w-start-mile').value);
     const end = parseFloat(document.getElementById('w-end-mile').value);
@@ -122,10 +124,8 @@ window.saveWorkReport = async function() {
         let reportData = {
             user_id: currentUserId, 
             work_date: wDate, 
-            fuel_type: fuelType, 
+            work_time: wTime || '00:00',
             distance_km: distance, 
-            start_mile: start, 
-            end_mile: end, 
             work_detail: detail, 
             Reimbursable_expense: expense.toFixed(2), 
             Approve_disbursement: "P"
@@ -167,34 +167,20 @@ window.renderUserReports = async function() {
     
     displayReports.forEach((r, idx) => {
         if(r.Approve_disbursement !== 'N') { 
-            filteredKm += r.distance_km; 
-            filteredBaht += parseFloat(r.Reimbursable_expense); 
+            filteredKm += parseFloat(r.distance_km) || 0; 
+            filteredBaht += parseFloat(r.Reimbursable_expense) || 0; 
             filteredCount++; 
         }
         let statusText = r.Approve_disbursement === 'P' ? 'รอตรวจสอบ' : (r.Approve_disbursement === 'Y' ? 'อนุมัติ' : 'ไม่อนุมัติ');
-        let actionBtns = r.Approve_disbursement === 'P' ? `<button class="btn-pill btn-edit py-1 px-2 me-1" style="font-size:12px;" onclick="window.editReport('${r.id}')">✏️ แก้ไข</button><button class="btn-pill btn-red py-1 px-2" style="font-size:12px;" onclick="window.deleteReport('${r.id}')">🗑️ ลบ</button>` : '-';
+        let actionBtns = r.Approve_disbursement === 'P' ? `<button class="btn-pill btn-edit py-1 px-2 me-1" style="font-size:12px;" onclick="window.editReport('${r.id}')">✏️</button><button class="btn-pill btn-red py-1 px-2" style="font-size:12px;" onclick="window.deleteReport('${r.id}')">🗑️</button>` : '-';
         if(r.Approve_disbursement === 'N' && r.reason) { statusText += `<br><small class="text-danger">เหตุผล: ${r.reason}</small>`; }
         
-        tbody.innerHTML += `<tr><td>${idx + 1}</td><td>${r.work_date}</td><td>${r.work_detail}</td><td>${r.fuel_type || 'ทั่วไป'}</td><td>${r.distance_km} กม.</td><td class="text-success">฿${r.Reimbursable_expense}</td><td><span class="status-tag status-${r.Approve_disbursement}">${statusText}</span></td><td>${actionBtns}</td></tr>`;
+        tbody.innerHTML += `<tr><td>${idx + 1}</td><td>${r.work_date}</td><td>${r.work_time || '-'}</td><td>${r.work_detail}</td><td>${r.distance_km} กม.</td><td class="text-success">฿${r.Reimbursable_expense}</td><td><span class="status-tag status-${r.Approve_disbursement}">${statusText}</span></td><td>${actionBtns}</td></tr>`;
     });
     
- // (โค้ดเดิมด้านบน... คำนวณ filteredCount ฯลฯ)
     document.getElementById('user-bill-count').innerText = `${filteredCount} รายการ`; 
     document.getElementById('user-bill-km').innerText = `${filteredKm.toFixed(2)} กม.`; 
     document.getElementById('user-bill-total').innerText = `฿${filteredBaht.toFixed(2)}`;
-
-    // === แปะเพิ่มส่วนนี้ เพื่อดันตัวเลขเข้ากล่องการ์ดสวยๆ ด้านบน ===
-    let allTimeBaht = 0;
-    let allTimeKm = 0;
-    myReports.forEach(r => {
-        if(r.Approve_disbursement === 'Y' || r.Approve_disbursement === 'P') { 
-            allTimeBaht += parseFloat(r.Reimbursable_expense) || 0; 
-            allTimeKm += parseFloat(r.distance_km) || 0; 
-        }
-    });
-    if(document.getElementById('sum-total')) document.getElementById('sum-total').innerText = allTimeBaht.toFixed(2);
-    if(document.getElementById('sum-km')) document.getElementById('sum-km').innerText = allTimeKm.toFixed(2);
-    if(document.getElementById('sum-month-km')) document.getElementById('sum-month-km').innerText = filteredKm.toFixed(2);
 }
 
 window.deleteReport = function(id) {
@@ -209,9 +195,7 @@ window.editReport = async function(id) {
         const r = docSnap.data();
         document.getElementById('edit-report-id').value = id; 
         document.getElementById('w-date').value = r.work_date; 
-        document.getElementById('w-fuel-type').value = r.fuel_type || "";
-        document.getElementById('w-start-mile').value = r.start_mile || 0; 
-        document.getElementById('w-end-mile').value = r.end_mile || 0; 
+        document.getElementById('w-time').value = r.work_time || ''; 
         document.getElementById('w-detail').value = r.work_detail;
         window.switchTab('work'); 
         window.calculateLiveExpense(); 
