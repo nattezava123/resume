@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Natthi Homnual -About Me  Resume</title>
+    <title>Natthi Homnual - Resume</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -40,7 +40,7 @@
         .summary-box { background: white; padding: 25px; border-radius: 12px; border-left: 5px solid var(--accent); box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 40px; line-height: 1.7; font-size: 0.95rem; color: var(--text); }
 
         /* Skills */
-        .skill-badge { background: white; color: var(--primary); border: 1px solid #e2e8f0; padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; transition: 0.3s; display: inline-block; margin-bottom: 10px; margin-right: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .skill-badge { background: white; color: var(--primary); border: 1px solid #e2e8f0; padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; transition: 0.3s; display: inline-block; margin-bottom: 10px; margin-right: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); cursor: pointer; }
         .skill-badge:hover { background: var(--accent); color: white; border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(24, 188, 156, 0.2); }
         
         /* Timeline Experience */
@@ -52,6 +52,10 @@
         .exp-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.08); border-color: #e2e8f0; }
         .exp-card:hover::before { background: var(--accent); box-shadow: 0 0 0 4px rgba(24, 188, 156, 0.2); }
         
+        .app-card { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; transition: 0.3s; break-inside: avoid; }
+        .app-card:hover { border-color: var(--accent); box-shadow: 0 4px 12px rgba(24, 188, 156, 0.1); }
+        .project-link:hover { color: var(--accent) !important; text-decoration: underline !important; }
+
         @media (max-width: 991px) { 
             .sidebar { min-height: auto; text-align: center; padding: 40px 20px; } 
             .contact-link { justify-content: center; } 
@@ -61,29 +65,60 @@
         }
 
         /* =========================================
-           PRINT CSS - จัดหน้า A4 ให้พอดี ไม่ตกขอบ
+           PRINT CSS - บีบอัดให้อยู่ใน 1 หน้า A4 พอดี
         ========================================= */
         @media print {
             @page { size: A4; margin: 0; } 
-            body { font-size: 13.5px !important; background-color: white !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            body { font-size: 10.5px !important; background-color: white !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; line-height: 1.3 !important; }
             
-            .main-wrapper { display: flex !important; flex-wrap: nowrap !important; align-items: stretch !important; min-height: 100vh; }
+            /* บังคับไม่ให้ล้น และจัดความกว้างใหม่ */
+            .main-wrapper { display: flex !important; flex-wrap: nowrap !important; align-items: stretch !important; height: 100vh !important; overflow: hidden !important; }
             
-            .sidebar { position: static !important; width: 30% !important; flex: 0 0 30% !important; max-width: 30% !important; padding: 30px 20px !important; }
-            .main-content { width: 70% !important; flex: 0 0 70% !important; max-width: 70% !important; margin-left: 0 !important; padding: 30px 40px !important; }
+            .sidebar { position: static !important; width: 28% !important; flex: 0 0 28% !important; max-width: 28% !important; padding: 25px 15px !important; }
+            .main-content { width: 72% !important; flex: 0 0 72% !important; max-width: 72% !important; margin-left: 0 !important; padding: 25px 30px !important; }
             
             .btn-download { display: none !important; }
             
-            .profile-img { width: 130px; height: 130px; margin-bottom: 15px; }
-            .section-title { font-size: 1.1rem; margin-bottom: 20px; padding-bottom: 5px; page-break-after: avoid !important; break-after: avoid !important; }
-            .summary-box { padding: 15px 20px; margin-bottom: 25px; font-size: 0.85rem; box-shadow: none !important; border: 1px solid #e2e8f0; border-left: 4px solid var(--accent); }
-            .skill-badge { padding: 4px 10px; margin-bottom: 5px; font-size: 0.75rem; }
+            /* ซ่อนประสบการณ์อื่นตอน Print ให้เหลือแต่ที่ต้องการ (ลดพื้นที่มหาศาล) */
+            .hide-on-print { display: none !important; }
             
-            .exp-card { margin-bottom: 15px !important; break-inside: avoid !important; page-break-inside: avoid !important; box-shadow: none !important; border: 1px solid #e2e8f0; }
-            .exp-card .card-body { padding: 15px !important; }
+            /* ลดขนาด Sidebar Components */
+            .profile-img { width: 110px !important; height: 110px !important; margin-bottom: 10px !important; border-width: 2px !important; }
+            .sidebar h3 { font-size: 1.2rem !important; margin-bottom: 2px !important; }
+            .sidebar h5 { font-size: 0.9rem !important; margin-bottom: 5px !important; }
+            .sidebar p.rounded-pill { padding: 2px 10px !important; font-size: 0.75rem !important; margin-top: 5px !important; margin-bottom: 15px !important; }
+            .sidebar .mt-4, .sidebar .mt-5 { margin-top: 15px !important; }
+            .sidebar h6 { font-size: 0.8rem !important; margin-bottom: 8px !important; }
+            .contact-link { margin-bottom: 6px !important; font-size: 0.8rem !important; gap: 8px !important; }
+            .contact-link i { font-size: 0.9rem !important; }
+            .sidebar .mb-4.ps-3 { margin-bottom: 10px !important; }
             
-            .timeline-container { padding-left: 0; margin-top: 10px; }
+            /* ลดระยะห่าง Main Content */
+            .section-title { font-size: 1rem !important; margin-bottom: 10px !important; padding-bottom: 2px !important; }
+            .summary-box { padding: 10px 15px !important; margin-bottom: 15px !important; font-size: 0.85rem !important; border-left-width: 3px !important; }
+            .row.g-4 { --bs-gutter-y: 0.5rem !important; }
+            section.mb-4, section.mb-5 { margin-bottom: 15px !important; }
+            .skill-badge { padding: 2px 6px !important; margin-bottom: 3px !important; font-size: 0.7rem !important; }
+            h6.fw-bold.mb-3 { margin-bottom: 5px !important; font-size: 0.85rem !important; }
+            
+            /* การ์ดประสบการณ์ทำงาน (บีบช่องว่าง) */
+            .exp-card { margin-bottom: 8px !important; break-inside: avoid !important; page-break-inside: avoid !important; box-shadow: none !important; border: 1px solid #e2e8f0; border-radius: 8px !important; }
+            .exp-card .card-body { padding: 10px 15px !important; }
+            .exp-card h5 { font-size: 0.95rem !important; margin-bottom: 0 !important; }
+            .exp-card h6 { font-size: 0.8rem !important; }
+            .exp-card .badge { padding: 3px 6px !important; font-size: 0.7rem !important; }
+            .exp-card ul li { margin-bottom: 2px !important; font-size: 0.85rem !important; }
+            
+            .timeline-container { padding-left: 0; margin-top: 5px; }
             .timeline-container::before, .exp-card::before { display: none !important; }
+            
+            /* การ์ดโปรเจกต์เว็บแอปพลิเคชัน (บีบช่องว่าง) */
+            .project-box { margin-top: 8px !important; padding-top: 8px !important; }
+            .project-box h6 { font-size: 0.85rem !important; margin-bottom: 5px !important; }
+            .app-card { padding: 8px 10px !important; margin-bottom: 5px !important; min-height: auto !important; }
+            .app-card .fw-bold { font-size: 0.85rem !important; margin-bottom: 2px !important; }
+            .app-card p { font-size: 0.75rem !important; margin-bottom: 4px !important; line-height: 1.2 !important; }
+            .app-card .badge { font-size: 0.65rem !important; padding: 2px 5px !important; }
         }
     </style>
 </head>
@@ -91,9 +126,10 @@
 
 <div class="container-fluid p-0">
     <div class="row g-0 main-wrapper">
+        <!-- SIDEBAR -->
         <aside class="col-lg-3 sidebar">
             <div class="text-center animate-fade">
-                <img src="profile.jpeg" alt="ณัฐที หอมนวล" class="profile-img" onerror="this.src='https://via.placeholder.com/170x170?text=Natthi'">
+                <img src="profile.jpg" alt="ณัฐที หอมนวล" class="profile-img" onerror="this.src='https://via.placeholder.com/170x170?text=Natthi'">
                 <h3 class="fw-bold mb-1 tracking-wider">Natthi Homnual</h3>
                 <h5 class="mb-2 text-white-50">ณัฐที หอมนวล</h5>
                 <p class="mb-4 mt-3 py-1 px-3 d-inline-block rounded-pill" style="background: rgba(24, 188, 156, 0.2); color: var(--accent); font-weight: 600; font-size: 0.85rem; letter-spacing: 1px;">
@@ -101,12 +137,10 @@
                 </p>
             </div>
 
-            
-
             <div class="mt-4 animate-fade" style="animation-delay: 0.2s;">
                 <h6 class="text-uppercase fw-bold mb-4 small opacity-75 letter-spacing-1">Contact Info</h6>
                 <a href="tel:0926298593" class="contact-link"><i class="fa-solid fa-phone"></i> 092-629-8593</a>
-                <a href="mailto:nattezava1996@gmail.com" class="contact-link"><i class="fa-solid fa-envelope"></i> nattezava1996@gmail.com</a>
+                <a href="mailto:nattezaval996@gmail.com" class="contact-link"><i class="fa-solid fa-envelope"></i> nattezaval996@gmail.com</a>
                 <a href="https://line.me/ti/p/w4y7jvW5kc" target="_blank" class="contact-link"><i class="fa-brands fa-line"></i> earthza11412</a>
                 <div class="contact-link"><i class="fa-solid fa-location-dot"></i> ศรีราชา, ชลบุรี 20110</div>
             </div>
@@ -115,8 +149,8 @@
                 <h6 class="text-uppercase fw-bold mb-4 small opacity-75 letter-spacing-1">Education</h6>
                 <div class="mb-4 ps-3 border-start border-2 border-accent position-relative">
                     <i class="fa-solid fa-graduation-cap position-absolute" style="left: -13px; top: -2px; color: var(--accent); background: var(--secondary); padding: 4px; border-radius: 50%; font-size: 0.7rem;"></i>
-                    <div class="fw-bold small text-white">มหาวิทยาลัยเซาธ์อีสท์บางกอก </div>
-                    <div class="small text-white-50 mt-1">ป.ตรี. เทคโนโลยีดิจิทัลและนวัตกรรม (GPA 3.65) </div>
+                    <div class="fw-bold small text-white">มหาวิทยาลัยเซาธ์อีสท์บางกอก</div>
+                    <div class="small text-white-50 mt-1">ป.ตรี. เทคโนโลยีดิจิทัลและนวัตกรรม (GPA 3.65)</div>
                 </div>
                 <div class="mb-4 ps-3 border-start border-2 border-accent position-relative">
                     <div class="absolute-dot" style="position: absolute; left: -6px; top: 4px; width: 10px; height: 10px; background: var(--accent); border-radius: 50%;"></div>
@@ -129,20 +163,18 @@
                     <div class="small text-white-50 mt-1">มัธยมศึกษา (GPA 2.50)</div>
                 </div>
             </div>
-            <br> <div  class="text-center" id="sfcaq5dn1k94a4qd1pebc9j4pamqwahyae4"></div>
-            <script type="text/javascript" src="https://counter1.optistats.ovh/private/counter.js?c=aq5dn1k94a4qd1pebc9j4pamqwahyae4&down=async" async></script>
-                <noscript><a href="https://www.freecounterstat.com" title="free counter"><img src="https://counter1.optistats.ovh/private/freecounterstat.php?c=aq5dn1k94a4qd1pebc9j4pamqwahyae4" border="0" title="free counter" alt="free counter"></a></noscript>
-
-
         </aside>
-        
+
+        <!-- MAIN CONTENT -->
         <main class="col-lg-9 main-content">
+            <!-- Download Button -->
             <div class="d-flex justify-content-end mb-2 btn-download animate-fade">
                 <button onclick="window.print()" class="btn text-white shadow px-4 py-2" style="background-color: var(--primary); border-radius: 8px; transition: 0.3s;">
                     <i class="fa-solid fa-print me-2 text-white-50"></i> Print / Save PDF
                 </button>
             </div>
 
+            <!-- About Me -->
             <section class="animate-fade" style="animation-delay: 0.1s;">
                 <h3 class="section-title">About Me</h3>
                 <div class="summary-box">
@@ -150,34 +182,42 @@
                 </div>
             </section>
 
+            <!-- Technical Expertise -->
             <section class="mb-4 animate-fade" style="animation-delay: 0.2s;">
                 <h3 class="section-title">Technical Expertise</h3>
                 <div class="row g-4">
-                    <div class="col-6">
-                        <h6 class="fw-bold mb-3 text-secondary"><i class="fa-solid fa-code text-accent me-2"></i> Database & Development</h6>
+                    <div class="col-12 col-md-4">
+                        <h6 class="fw-bold mb-3 text-secondary"><i class="fa-solid fa-laptop-code text-accent me-2"></i> Programming & Web</h6>
                         <div class="d-flex flex-wrap">
-                            <span class="skill-badge">Microsoft SQL Server</span>
-                            <span class="skill-badge">Oracle SQL</span>
-                            <span class="skill-badge">Microsoft Azure</span>
-                            <span class="skill-badge">Azure Data Factory</span>
-                            <span class="skill-badge">JavaScript</span>
+                            <span class="skill-badge" data-bs-toggle="tooltip" data-bs-placement="top" title="เขียนสคริปต์ควบคุมการทำงานหน้าเว็บ และพัฒนา Logic เช่น ระบบแจ้งซ่อม IT">JavaScript</span>
+                            <span class="skill-badge" data-bs-toggle="tooltip" data-bs-placement="top" title="วางโครงสร้างและตกแต่งหน้าเว็บให้สวยงาม รองรับทุกขนาดหน้าจอ">HTML / CSS</span>
+                            <span class="skill-badge" data-bs-toggle="tooltip" data-bs-placement="top" title="ใช้ Framework ออกแบบ UI หน้าเว็บให้เสร็จไวและเป็นระเบียบ เช่น หน้า Dashboard">Bootstrap</span>
+                            <span class="skill-badge" data-bs-toggle="tooltip" data-bs-placement="top" title="ความเข้าใจในการเชื่อมต่อ ดึงและส่งข้อมูลระหว่างฝั่งหน้าบ้าน (Web) และฐานข้อมูล">RESTful API Concepts</span>
                         </div>
                     </div>
-                    <div class="col-6">
-                        <h6 class="fw-bold mb-3 text-secondary"><i class="fa-solid fa-network-wired text-accent me-2"></i> Infrastructure & Systems</h6>
+                    <div class="col-12 col-md-4">
+                        <h6 class="fw-bold mb-3 text-secondary"><i class="fa-solid fa-database text-accent me-2"></i> Database & Cloud</h6>
                         <div class="d-flex flex-wrap">
-                            <span class="skill-badge">Windows OS Admin</span>
-                            <span class="skill-badge">Networking (LAN/WAN)</span>
-                            <span class="skill-badge">Routers & Firewalls</span>
-                            <span class="skill-badge">Hardware Troubleshooting</span>
-                            <span class="skill-badge">VPN & File Server Support</span>
+                            <span class="skill-badge" data-bs-toggle="tooltip" data-bs-placement="top" title="จัดการ Database, เขียน Query และทำ Report สรุปข้อมูลสายการผลิต">Microsoft SQL Server</span>
+                            <span class="skill-badge" data-bs-toggle="tooltip" data-bs-placement="top" title="บริหารจัดการและคิวรีระบบฐานข้อมูลขนาดใหญ่ระดับ Enterprise">Oracle SQL</span>
+                            <span class="skill-badge" data-bs-toggle="tooltip" data-bs-placement="top" title="จัดการและดูแลระบบเซิร์ฟเวอร์บน Cloud เพื่อความเสถียรของแอปพลิเคชัน">Microsoft Azure</span>
+                            <span class="skill-badge" data-bs-toggle="tooltip" data-bs-placement="top" title="สร้างท่อส่งข้อมูล (Data Pipeline) เพื่อจัดการข้อมูลมหาศาล">Azure Data Factory</span>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <h6 class="fw-bold mb-3 text-secondary"><i class="fa-solid fa-network-wired text-accent me-2"></i> Infrastructure</h6>
+                        <div class="d-flex flex-wrap">
+                            <span class="skill-badge" data-bs-toggle="tooltip" data-bs-placement="top" title="ตั้งค่าและแก้ปัญหาระบบปฏิบัติการเซิร์ฟเวอร์ จัดการสิทธิ์การใช้งานพนักงาน">Windows OS Admin</span>
+                            <span class="skill-badge" data-bs-toggle="tooltip" data-bs-placement="top" title="ดูแลอินเทอร์เน็ต, ตั้งค่า Switch/Router และเครือข่ายให้ออนไลน์ตลอดเวลา">Networking (LAN/WAN)</span>
+                            <span class="skill-badge" data-bs-toggle="tooltip" data-bs-placement="top" title="วิเคราะห์และซ่อมแซมปัญหาคอมพิวเตอร์, ปริ้นเตอร์ และอุปกรณ์ IT ในโรงงาน">Hardware Troubleshooting</span>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <section class="animate-fade" style="animation-delay: 0.3s;">
-                <h3 class="section-title"> Experience</h3>
+            <!-- Experience Timeline -->
+            <section class="mb-5 animate-fade" style="animation-delay: 0.3s;">
+                <h3 class="section-title">Experience</h3>
                 
                 <div id="loader" class="text-center py-5">
                     <div class="spinner-grow text-success" role="status" style="width: 3rem; height: 3rem;"></div>
@@ -189,7 +229,6 @@
         </main>
     </div>
 </div>
-
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -225,8 +264,66 @@
 
             snap.forEach(doc => {
                 const data = doc.data();
+                let extraProjectsHTML = '';
+                
+                // ตัวแปรเพิ่มคลาส hide-on-print สำหรับซ่อนตอนปริ้น PDF
+                let isCelestica = (data.company && data.company.toUpperCase().includes("CELESTICA"));
+                let printClass = isCelestica ? "" : "hide-on-print";
+
+                if (isCelestica) {
+                    const myApps = [
+                        {
+                            name: "Factory IT Service Center",
+                            desc: "IT service desk web application featuring role-based access control (Admin/User) and secure authentication.",
+                            tech: ["JavaScript", "Bootstrap", "Auth"],
+                            link: "https://nattezava123.github.io/Webreport/"
+                        },
+                        {
+                            name: "HR & Skill Allowance Tracking",
+                            desc: "Internal HR management system equipped with an automated calculator for tracking employee skill allowances.",
+                            tech: ["JavaScript", "LocalStorage", "HTML/CSS"],
+                            link: "https://sites.google.com/celestica.com/sppro-support-team/home/skill-allowance-tracking"
+                        },
+                        {
+                            name: "Enterprise Database Dashboard",
+                            desc: "Enterprise data dashboard providing a desktop-like UI for advanced database querying and reporting.",
+                            tech: ["SQL", "Bootstrap 5", "UI/UX"],
+                            link: "https://sites.google.com/celestica.com/sppro-support-team/home/des-server"
+                        }
+                    ];
+
+                    let appsCards = myApps.map(app => `
+                        <div class="col-md-6 col-lg-6 mb-2">
+                            <div class="p-3 app-card h-100 d-flex flex-column">
+                                <div class="fw-bold mb-1" style="font-size: 0.95rem;">
+                                    <a href="${app.link}" target="_blank" class="text-dark text-decoration-none project-link d-flex align-items-center">
+                                        <i class="fa-solid fa-link text-accent me-2"></i>${app.name}
+                                    </a>
+                                </div>
+                                <p class="text-secondary mb-2 flex-grow-1 mt-1" style="font-size: 0.82rem; line-height: 1.5;">
+                                    ${app.desc}
+                                </p>
+                                <div>
+                                    ${app.tech.map(t => `<span class="badge text-secondary border me-1 mb-1" style="background: white; font-weight: 500; font-size: 0.7rem;">${t}</span>`).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+
+                    extraProjectsHTML = `
+                        <div class="mt-4 pt-3 project-box" style="border-top: 1px dashed #cbd5e1;">
+                            <h6 class="fw-bold text-primary mb-3" style="font-size: 0.9rem;">
+                                <i class="fa-solid fa-layer-group text-warning me-2"></i>Developed Web Applications <span class="text-muted fw-normal" style="font-size: 0.75rem;">(Click to view)</span>
+                            </h6>
+                            <div class="row g-2">
+                                ${appsCards}
+                            </div>
+                        </div>
+                    `;
+                }
+
                 html += `
-                    <div class="card exp-card">
+                    <div class="card exp-card ${printClass}">
                         <div class="card-body p-4">
                             <div class="d-flex justify-content-between flex-wrap gap-2 align-items-start mb-3">
                                 <div>
@@ -239,9 +336,10 @@
                             </div>
                             <ul class="mb-0 text-secondary" style="font-size: 0.95rem; line-height: 1.6;">
                                 ${data.details && Array.isArray(data.details) 
-                                    ? data.details.map(d => `<li class="mb-1">${d}</li>`).join('') 
+                                    ? data.details.map(d => `<li class="mb-2" style="text-align: justify;">${d}</li>`).join('') 
                                     : '<li>ไม่มีรายละเอียดข้อมูล</li>'}
                             </ul>
+                            ${extraProjectsHTML}
                         </div>
                     </div>`;
             });
@@ -264,5 +362,14 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    });
+</script>
+
 </body>
 </html>
